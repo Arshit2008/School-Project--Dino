@@ -58,10 +58,16 @@ def register_player(username):
     try:
         mycon = connect()
         c = mycon.cursor()
+        c.execute("select players_id from player")
+        check = c.fetchone()
         a = username,
         
-        c.execute (" insert into player(username) values(%s)",a )
-        player_id = c.lastrowid
+        if check:
+            print("player exists")
+        else:
+        
+            c.execute (" insert into player(username) values(%s)", a )
+            player_id = c.lastrowid
         
         
         mycon.commit()
