@@ -98,8 +98,8 @@ while run :
         
             
     screen.fill((255,255,255))
-    pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 2) 
-    pygame.draw.rect(screen, (0,0,0), (dino_x, dino_y, dino_w, dino_h))
+    pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y),3) 
+    pygame.draw.rect(screen, (0,0,0), (dino_x, dino_y, dino_w, dino_h),1)
     pygame.draw.rect(screen, (0,150,0),(cac_x,cac_y,cac_w,cac_h))
     
     pygame.display.update()  #update the screen with the new drawings
