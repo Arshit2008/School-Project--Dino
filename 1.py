@@ -9,60 +9,78 @@ DB_password = "computer"
 DB = input("Database Name: ")
 
 def connect():
-    m = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password, database = DB)
+    try:
+        m = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password, database = DB)
+    except Exception as err:
+        print("DATABASE CONNNECTION ERROR :",err)
     return m
 
 def reset(DB):
-    mycon= connect()
-    c = mycon.cursor()
-    c.execute(f"drop database {DB}")
-    print("Database deleted ! ")
+    try:    
+        mycon = connect()
+        c = mycon.cursor()
+    
+        c.execute(f"DROP DATABASE IF EXISTS {DB}")
+        print("Database deleted !")
+    except Exception as err:
+        print(f"Database delete error: {err}")
+    finally:
+        mycon.close()
 
 def Db():
-    mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
-    c=mycon.cursor()
-    
-    c.execute("create database if not exists GAME")
-    c.execute (f"use {DB}")
-    
-    c.execute("""create table if not exists player(
-        players_id int primary key auto_increment,
-        username varchar(20) unique not null
-    )""")
-    
-    c.execute("""create table if not exists highscores(
-        score_id int primary key auto_increment,
-        player_id int,
-        score int not null,
-        obstaces int not null,
-        foreign key(player_id) references player(players_id) on delete cascade
+    try:
+        mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
+        c=mycon.cursor()
+        
+        c.execute("create database if not exists GAME")
+        c.execute (f"use {DB}")
+        
+        c.execute("""create table if not exists player(
+            players_id int primary key auto_increment,
+            username varchar(20) unique not null
         )""")
-    
-    mycon.commit()  
-    mycon.close()
-    print("All databases made")
-    
+        
+        c.execute("""create table if not exists highscores(
+            score_id int primary key auto_increment,
+            player_id int,
+            score int not null,
+            obstacles int not null,
+            foreign key(player_id) references player(players_id) on delete cascade
+            )""")
+        
+        mycon.commit()  
+        mycon.close()
+        print("All databases made")
+    except Exception as err:
+        print("Error is : ",err)
+        
 def register_player(username):
-    mycon = connect()
-    c = mycon.cursor()
-    a = username,
-    
-    c.execute (" insert into player(username) values(%s)",a )
-    player_id = c.lastrowid
-    
-    
-    mycon.commit()
-    mycon.close()
-    return player_id
+    try:
+        mycon = connect()
+        c = mycon.cursor()
+        a = username,
+        
+        c.execute (" insert into player(username) values(%s)",a )
+        player_id = c.lastrowid
+        
+        
+        mycon.commit()
+        mycon.close()
+        return player_id
+    except Exception as err:
+            print("Error is : ",err)
 
 def save_scores (player_id,score,obs):
-    mycon = connect()
-    c = mycon.cursor()
-    
-    c.execute ("INSERT INTO highscores(score_id,player_id,score,obstacles) values(%s,%s,%s,%s)",(1,player_id,score,obs))
-    
-    mycon.commit()
-    mycon.close()
+    try:
+        mycon = connect()
+        c = mycon.cursor()
+        
+        c.execute ("INSERT INTO highscores(score_id,player_id,score,obstacles) values(%s,%s,%s,%s)",(1,player_id,score,obs))
+        
+        mycon.commit()
+        mycon.close()
+    except Exception as err:
+        print("Error is : ",err)
     
 ##############    MAIN _ GAME    ##############
 def game(player_id):
