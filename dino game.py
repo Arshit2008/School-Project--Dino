@@ -66,6 +66,8 @@ cac_y = 300
 cac_w = 25          #cactus dimensions and position
 cac_h = 50
 
+cactus_passed = False
+
 dino_rect = pygame.Rect(dino_x,dino_y,dino_w,dino_h)
 cactus_rect = pygame.Rect(cac_x,cac_y,cac_w,cac_h)
 
@@ -98,11 +100,14 @@ while run :
     velo = velo + gravity
     dino_y = dino_y + velo           #main-calculation for jump and gravity
     cac_x = cac_x - cac_speed
+    
+    
     #print ("dino jump position:",dino_y)
 
     score = score + 0.1
-    if cac_x < dino_x and cac_x > dino_x - cac_speed:
-        obstacles_cleared += 1
+    if (cac_x + cac_w) < dino_x and cactus_passed == False:
+        obstacles_cleared = obstacles_cleared + 1
+        cactus_passed = True
        
     dino_rect.x= dino_x
     dino_rect.y= dino_y
@@ -113,11 +118,24 @@ while run :
         dino_y = ground_y - dino_h
         velo = 0
         
+    cac_x = cac_x - cac_speed
+    
+    if (cac_x + cac_w) < dino_x and cactus_passed == False:
+        obstacles_cleared = obstacles_cleared + 1
+        cactus_passed = True
+
+    if cac_x < 0:
+        cac_x = 800
+    
+    
             
     screen.fill((255,255,255))
     
     score_text = font.render ("score:" + str(int(score)), False, (0,0,0))
-    screen.blit(score_text, (20,20))
+    screen.blit(score_text, (5,5))
+    
+    obstacles_text = font.render ("obstacles cleared:" + str(obstacles_cleared), False, (0,0,0))
+    screen.blit(obstacles_text, (5,30))
     
     pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  #draw the ground
     pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h))  #draw the dino
@@ -129,6 +147,6 @@ while run :
         print("Game Over")
         run = False
     
-    clock.tick(60)             #refresh rate of the game
+    clock.tick(30)             #refresh rate of the game
 pygame.quit()
 
