@@ -53,6 +53,9 @@ pygame.display.set_caption("game")
 clock = pygame.time.Clock()  #gamespeed
 run = True
 
+score = 0.001
+obstacles_cleared = 0
+
 dino_h = 50
 dino_w = 30           #dino dimensions and position
 dino_x = 100
@@ -63,13 +66,18 @@ cac_y = 300
 cac_w = 25          #cactus dimensions and position
 cac_h = 50
 
+dino_rect = pygame.Rect(dino_x,dino_y,dino_w,dino_h)
+cactus_rect = pygame.Rect(cac_x,cac_y,cac_w,cac_h)
+
 
 ground_y = 350      #Ground level
 
 cac_speed = 8
 velo = 0            #velocity of all
-gravity = 2
-jump = -20
+gravity = .5
+jump = -10
+
+font = pygame.font.Font(None, 36)
 
 while run :
     for event in pygame.event.get():
@@ -91,6 +99,15 @@ while run :
     dino_y = dino_y + velo           #main-calculation for jump and gravity
     cac_x = cac_x - cac_speed
     #print ("dino jump position:",dino_y)
+
+    score = score + 0.1
+    if cac_x < dino_x and cac_x > dino_x - cac_speed:
+        obstacles_cleared += 1
+       
+    dino_rect.x= dino_x
+    dino_rect.y= dino_y
+    cactus_rect.x= cac_x
+    cactus_rect.y= cac_y
     
     if dino_y >= ground_y - dino_h:
         dino_y = ground_y - dino_h
@@ -98,11 +115,20 @@ while run :
         
             
     screen.fill((255,255,255))
-    pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 2) 
-    pygame.draw.rect(screen, (0,0,0), (dino_x, dino_y, dino_w, dino_h))
-    pygame.draw.rect(screen, (0,150,0),(cac_x,cac_y,cac_w,cac_h))
+    
+    score_text = font.render ("score:" + str(int(score)), False, (0,0,0))
+    screen.blit(score_text, (20,20))
+    
+    pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  #draw the ground
+    pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h))  #draw the dino
+    pygame.draw.rect(screen, (0,150,0), (cac_x,cac_y,cac_w,cac_h))  #draw the cactus
     
     pygame.display.update()  #update the screen with the new drawings
     
-    clock.tick(25)             #refresh rate of the game
+    if dino_rect.colliderect(cactus_rect):
+        print("Game Over")
+        run = False
+    
+    clock.tick(60)             #refresh rate of the game
 pygame.quit()
+
