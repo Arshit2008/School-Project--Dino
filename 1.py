@@ -1,26 +1,27 @@
 import mysql.connector
 import pygame
-
+import tkinter as tk
 
 
 DB_host = "localhost"
 DB_user = "root"
 DB_password = "computer"
+DB = input("Database Name: ")
 
 def connect():
-    mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
-    return mycon
+    m = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password, database = DB)
+    return m
 
 
 def Db():
-    mycon = connect()
+    mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
     c=mycon.cursor()
     
     c.execute("create database if not exists GAME")
-    c.execute ("use GAME")
+    c.execute (f"use {DB}")
     
     c.execute("""create table if not exists player(
-        players_id int primary key,
+        players_id int primary key auto_increment,
         username varchar(20) unique not null
     )""")
     
@@ -36,11 +37,43 @@ def Db():
     mycon.close()
     print("All databases made")
     
+def register_player(username):
+    mycon = connect()
+    c = mycon.cursor()
+    a = (username)
+    
+    c.execute (" insert into player(username) values(%s)",a )
+    
+    mycon.commit()
+    mycon.close()
+    
     
 
 ##############   DB-ON-LOADING  ############## 
 
 Db()
+
+root = tk.Tk()
+root.title("Dino Game")
+root.geometry("400x250")
+
+username_label = tk.Label(root , text = "Enter Username: ")    
+username_label.pack()
+
+username_entry = tk.Entry(root)
+username_entry.pack()
+
+def start_game():
+    username = username_entry.get()
+    print("Username:", username)
+    
+    register_player(username)
+    root.quit
+
+start_button = tk.Button(root, text = "Start Game", command = start_game)
+start_button.pack()
+
+root.mainloop()
 
 ##############    MAIN _ GAME    ##############
 
@@ -76,8 +109,8 @@ ground_y = 350      #Ground level
 
 cac_speed = 8
 velo = 0            #velocity of all
-gravity = .5
-jump = -10
+gravity = 1
+jump = -14
 
 font = pygame.font.Font(None, 36)
 
@@ -89,12 +122,9 @@ while run :
                     if dino_y >= ground_y - dino_h:
                         velo = jump
         
-            elif event.type == pygame.KEYDOWN or event.type == pygame.QUIT:
-                try:
+            if event.type == pygame.KEYDOWN :
                     if event.key == pygame.K_ESCAPE:
                         run = False
-                except:
-                    run = False
 
                 
     velo = velo + gravity
@@ -117,24 +147,19 @@ while run :
     if dino_y >= ground_y - dino_h:
         dino_y = ground_y - dino_h
         velo = 0
-        
-    cac_x = cac_x - cac_speed
-    
-    if (cac_x + cac_w) < dino_x and cactus_passed == False:
-        obstacles_cleared = obstacles_cleared + 1
-        cactus_passed = True
 
     if cac_x < 0:
         cac_x = 800
+        cactus_passed = False
     
     
             
     screen.fill((255,255,255))
     
-    score_text = font.render ("score:" + str(int(score)), False, (0,0,0))
+    score_text = font.render ("score:" + str(int(score)), True, (0,0,0))
     screen.blit(score_text, (5,5))
     
-    obstacles_text = font.render ("obstacles cleared:" + str(obstacles_cleared), False, (0,0,0))
+    obstacles_text = font.render ("obstacles cleared:" + str(obstacles_cleared), True, (0,0,0))
     screen.blit(obstacles_text, (5,30))
     
     pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  #draw the ground
@@ -147,6 +172,10 @@ while run :
         print("Game Over")
         run = False
     
-    clock.tick(30)             #refresh rate of the game
+    clock.tick(165)             #refresh rate of the game
 pygame.quit()
 
+mycon = connect()
+c = mycon.cursor()
+c.execute("select * from player")
+print(c.fetchall())
