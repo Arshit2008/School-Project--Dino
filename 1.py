@@ -83,7 +83,7 @@ def save_scores (player_id,score,obs):
         mycon = connect()
         c = mycon.cursor()
         
-        c.execute("select score from highscores where player_id = %s"),(player_id,)
+        c.execute(f"select score from highscores where player_id = {player_id}")
         result = c.fetchone()
         
         if result:
@@ -94,9 +94,9 @@ def save_scores (player_id,score,obs):
             else:
                 c.execute(f"""
                         UPDATE highscores
-                        set score = %s ,obstacles = %s
-                        where player_id = %s
-                        """),(score,obs,player_id)
+                        set score = {score} ,obstacles = {obs}
+                        where player_id = {player_id}
+                        """)
                 print("New Highscore !")
         else:
             c.execute ("INSERT INTO highscores(player_id,score,obstacles) values(%s,%s,%s)",(player_id,score,obs))    
