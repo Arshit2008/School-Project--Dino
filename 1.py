@@ -58,21 +58,23 @@ def register_player(username):
     try:
         mycon = connect()
         c = mycon.cursor()
+        
         c.execute("select players_id from player")
         check = c.fetchone()
-        a = username,
         
         if check:
+            player_id = check[0]
             print("player exists")
         else:
         
-            c.execute (" insert into player(username) values(%s)", a )
+            c.execute (" insert into player(username) values(%s)", (username,) )
             player_id = c.lastrowid
         
-        
-        mycon.commit()
+            print("New Player")
+            mycon.commit()
         mycon.close()
         return player_id
+    
     except Exception as err:
             print("Error is : ",err)
 
@@ -81,12 +83,60 @@ def save_scores (player_id,score,obs):
         mycon = connect()
         c = mycon.cursor()
         
-        c.execute ("INSERT INTO highscores(score_id,player_id,score,obstacles) values(%s,%s,%s,%s)",(1,player_id,score,obs))
+        c.execute("select score from highscores where player_id = %s"),(player_id,)
+        result = c.fetchone()
         
+        if result:
+            score_old = result[0]
+            if score_old>score:
+                print(f"Old Score Higher :{score_old}")
+                
+            else:
+                c.execute(f"""
+                        UPDATE highscores
+                        set score = %s ,obstacles = %s
+                        where player_id = %s
+                        """),(score,obs,player_id)
+                print("New Highscore !")
+        else:
+            c.execute ("INSERT INTO highscores(player_id,score,obstacles) values(%s,%s,%s)",(player_id,score,obs))    
+            
         mycon.commit()
         mycon.close()
     except Exception as err:
         print("Error is : ",err)
+        
+        
+def show_stats():
+    mycon = connect()
+    c = mycon.cursor()
+    
+    c.execute("""
+              select username, score ,obstacles from highscores h, player p
+              where p.players_id = h.player_id
+              order by score desc
+              """)
+    results =  c.fetchall()
+    mycon.close()
+    
+    
+    title = tk.Label(root,text = "High-Scores", font = ("arial",18))
+    title.pack(pady=10)
+    
+    stats = tk.Toplevel(root)
+    stats.title("High-Score")
+    stats.geometry("400x300")
+    
+    for i,row in enumerate (results, start = 1):
+        username = row[0]
+        score = row[1]
+        obstacle = row[2]
+        
+        text = f"{i}.{username}    Score :{score}    Obstacles :{obstacle}"
+        
+        label = tk.Label(stats,text = text ,font = ("arial",12))
+        label.pack()
+    
     
 ##############    MAIN _ GAME    ##############
 def game(player_id):
@@ -194,9 +244,9 @@ def game(player_id):
     
     
 ##############   DB-ON-LOADING  ############## 
-reset(DB)
-Db()
 
+#reset(DB)
+Db()
 
 ##############   TKINTER-MENU   ##############
 root = tk.Tk()
@@ -220,7 +270,7 @@ def start_game():
 start_button = tk.Button(root, text = "Start Game", command = start_game)
 start_button.pack()
 
-tk.Button(root, text = "Stat", command = root.quit).pack()
+tk.Button(root, text = "Stat", command = show_stats).pack()
 
 root.mainloop()
 
