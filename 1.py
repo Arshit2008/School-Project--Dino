@@ -103,6 +103,7 @@ def save_scores (player_id,score,obs):
             
         mycon.commit()
         mycon.close()
+        
     except Exception as err:
         print("Error is : ",err)
         
@@ -179,9 +180,12 @@ def game(player_id):
 
     while run :
         for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
+            
+                if event.type == pygame.KEYUP:
+            
                     if event.key == pygame.K_SPACE:
                         # print(event.key)
+            
                         if dino_y >= ground_y - dino_h:
                             velo = jump
             
@@ -198,6 +202,7 @@ def game(player_id):
         #print ("dino jump position:",dino_y)
 
         score = score + 0.1
+        
         if (cac_x + cac_w) < dino_x and cactus_passed == False:
             obstacle = obstacle + 1
             cactus_passed = True
@@ -213,9 +218,7 @@ def game(player_id):
 
         if cac_x < 0:
             cac_x = 800
-            cactus_passed = False
-        
-        
+            cactus_passed = False    
                 
         screen.fill((255,255,255))
         
@@ -262,8 +265,10 @@ username_entry.pack()
 def start_game():
     username = username_entry.get()
     print("Username:", username)
+    
     player_id = register_player(username)
     print("player id : ",player_id)
+    
     root.destroy()
     game(player_id)
 
@@ -273,7 +278,6 @@ start_button.pack()
 tk.Button(root, text = "Stat", command = show_stats).pack()
 
 root.mainloop()
-
 
 mycon = connect()
 c = mycon.cursor()
