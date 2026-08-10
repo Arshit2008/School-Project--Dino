@@ -2,11 +2,10 @@ import mysql.connector
 import pygame
 import tkinter as tk
 
-
 DB_host = "localhost"
 DB_user = "root"
 DB_password = "computer"
-DB = input("Database Name: ")
+DB_ = input("Database Name: ")
 
 def connect():
     try:
@@ -15,12 +14,13 @@ def connect():
         print("DATABASE CONNNECTION ERROR :",err)
     return m
 
-def reset(DB):
+def reset(DB_):
     try:    
         mycon = connect()
         c = mycon.cursor()
+        a = DB_
     
-        c.execute(f"DROP DATABASE IF EXISTS {DB}")
+        c.execute(f"DROP DATABASE IF EXISTS {a}")
         print("Database deleted !")
     except Exception as err:
         print(f"Database delete error: {err}")
@@ -33,7 +33,7 @@ def Db():
         c=mycon.cursor()
         
         c.execute("create database if not exists GAME")
-        c.execute (f"use {DB}")
+        c.execute (f"use {DB_}")
         
         c.execute("""create table if not exists player(
             players_id int primary key auto_increment,
