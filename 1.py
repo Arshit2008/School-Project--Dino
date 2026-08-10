@@ -9,7 +9,7 @@ DB_ = input("Database Name: ")
 
 def connect():
     try:
-        m = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password, database = DB)
+        m = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password, database = DB_)
     except Exception as err:
         print("DATABASE CONNNECTION ERROR :",err)
     return m
@@ -181,7 +181,7 @@ def game(player_id):
     while run :
         for event in pygame.event.get():
             
-                if event.type == pygame.KEYUP:
+                if event.type == pygame.KEYDOWN:
             
                     if event.key == pygame.K_SPACE:
                         # print(event.key)
