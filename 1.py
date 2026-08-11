@@ -138,6 +138,8 @@ def show_stats():
         label = tk.Label(stats,text = text ,font = ("arial",12))
         label.pack()
     
+game_history = []
+
     
 ##############    MAIN _ GAME    ##############
 def game(player_id):
@@ -236,6 +238,10 @@ def game(player_id):
         
         if dino_rect.colliderect(cactus_rect):
             print("Game Over")
+            
+            final_score = int(score)
+            game_history.append(final_score)
+            print("Game History : ",game_history)
             
             save_scores(player_id,int(score),obstacle)
             
