@@ -59,7 +59,7 @@ def register_player(username):
         mycon = connect()
         c = mycon.cursor()
         
-        c.execute("select players_id from player")
+        c.execute("select players_id from player where username = %s",(username,))
         check = c.fetchone()
         
         if check:
@@ -140,6 +140,68 @@ def show_stats():
     
 game_history = []
 
+def retry_game(retry,player_id):
+    retry.destroy()
+    game(player_id)
+
+def retry_menu(player_id):
+    retry = tk.Toplevel()
+    retry.title("Game over")
+    retry.geometry("300x200")
+    
+    tk.Label(
+        retry,text = "Game Over",
+        font = ("Arial",20)
+    ).pack(pady = 20)
+    
+    tk.Button(
+        retry,
+        text = "RETRY",
+        command = retry_game(retry,player_id)
+    ).pack(pady = 20)
+    
+    tk.Button(
+        retry,
+        text = "Retry",
+        command = retry.destroy
+    ).pack(pady = 5)
+
+def game_over_window(player_id,final_score,obstacles):
+    window = tk.Toplevel()
+    window.title("Game Over")
+    window.geometry("350x250")
+    
+    tk.Label(
+        window,
+        text = "Game over",
+        font = ("arial",20)
+    ).pack(pady = 15)
+    
+    tk.Label(
+        window,
+        text = f"Final score: {final_score}",
+        font = ("arial",14)
+    ).pack()
+    
+    tk.Label(
+        window,
+        text = f"Obstacles cleared: {obstacles}",
+        font = ("arial",14)
+    ).pack(pady = 5)
+    
+    tk.Button(
+        window,
+        text = "Retry",
+        command = retry_game (window,player_id)
+    ).pack(pady = 10)
+       
+       
+    tk.Button(
+        window,
+        text = "Exit",
+        command =window.destroy 
+    ).pack()
+    
     
 ##############    MAIN _ GAME    ##############
 def game(player_id):
@@ -240,17 +302,16 @@ def game(player_id):
             print("Game Over")
             
             final_score = int(score)
-            game_history.append(final_score)
+            game_history.append((final_score,obstacle))
             print("Game History : ",game_history)
             
             save_scores(player_id,int(score),obstacle)
-            
             run = False
         
         clock.tick(30)             #refresh rate of the game
     pygame.quit()
     
-    
+    retry_menu(player_id)
     
 ##############   DB-ON-LOADING  ############## 
 
