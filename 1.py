@@ -52,7 +52,7 @@ def Db():
         mycon.close()
         print("All databases made")
     except Exception as err:
-        print("Error is : ",err)
+        print("1.Error is : ",err)
         
 def register_player(username):
     try:
@@ -76,7 +76,7 @@ def register_player(username):
         return player_id
     
     except Exception as err:
-            print("Error is : ",err)
+            print("2.Error is : ",err)
 
 def save_scores (player_id,score,obs):
     try:
@@ -105,7 +105,7 @@ def save_scores (player_id,score,obs):
         mycon.close()
         
     except Exception as err:
-        print("Error is : ",err)
+        print("3.Error is : ",err)
         
         
 def show_stats():
@@ -119,10 +119,6 @@ def show_stats():
               """)
     results =  c.fetchall()
     mycon.close()
-    
-    
-    title = tk.Label(root,text = "High-Scores", font = ("arial",18))
-    title.pack(pady=10)
     
     stats = tk.Toplevel(root)
     stats.title("High-Score")
@@ -138,6 +134,14 @@ def show_stats():
         label = tk.Label(stats,text = text ,font = ("arial",12))
         label.pack()
     
+def score ():
+    mycon = connect()
+    c= mycon.cursor()
+    
+    c.execute("""SELECT username,score,obstacles FROM highscores,player 
+              WHERE player_id = players_id 
+              ORDER BY score DESC""")
+    print(c.fetchall())
     
 ##############    MAIN _ GAME    ##############
 def game(player_id):
@@ -241,7 +245,7 @@ def game(player_id):
             
             run = False
         
-        clock.tick(30)             #refresh rate of the game
+        clock.tick(60)             #refresh rate of the game
     pygame.quit()
     
     
@@ -275,7 +279,7 @@ def start_game():
 start_button = tk.Button(root, text = "Start Game", command = start_game)
 start_button.pack()
 
-tk.Button(root, text = "Stat", command = show_stats).pack()
+tk.Button(root, text = "Scores", command = show_stats).pack()
 
 root.mainloop()
 
@@ -283,3 +287,5 @@ mycon = connect()
 c = mycon.cursor()
 c.execute("select * from player")
 print(c.fetchall())
+
+score()
