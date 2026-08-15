@@ -140,31 +140,17 @@ def show_stats():
     
 game_history = []
 
-def retry_game(retry,player_id):
-    retry.destroy()
-    game(player_id)
+def retry_game(window,player_id):
+    window.destroy()
+    final_score,obstacles = game(player_id)
+    game_over_window(player_id,final_score,obstacles)
+    
 
-def retry_menu(player_id):
-    retry = tk.Toplevel()
-    retry.title("Game over")
-    retry.geometry("300x200")
+
+def exit_game(window):
+    window.destroy()
+    root.destroy()
     
-    tk.Label(
-        retry,text = "Game Over",
-        font = ("Arial",20)
-    ).pack(pady = 20)
-    
-    tk.Button(
-        retry,
-        text = "RETRY",
-        command = retry_game(retry,player_id)
-    ).pack(pady = 20)
-    
-    tk.Button(
-        retry,
-        text = "Retry",
-        command = retry.destroy
-    ).pack(pady = 5)
 
 def game_over_window(player_id,final_score,obstacles):
     window = tk.Toplevel()
@@ -192,17 +178,17 @@ def game_over_window(player_id,final_score,obstacles):
     tk.Button(
         window,
         text = "Retry",
-        command = retry_game (window,player_id)
+        command =lambda: retry_game (window,player_id)
     ).pack(pady = 10)
        
        
     tk.Button(
         window,
         text = "Exit",
-        command =window.destroy 
+        command =lambda: exit_game(window)
     ).pack()
-    
-    
+
+
 ##############    MAIN _ GAME    ##############
 def game(player_id):
     pygame.init()
@@ -310,8 +296,7 @@ def game(player_id):
         
         clock.tick(30)             #refresh rate of the game
     pygame.quit()
-    
-    retry_menu(player_id)
+    return final_score, obstacle
     
 ##############   DB-ON-LOADING  ############## 
 
@@ -336,8 +321,9 @@ def start_game():
     player_id = register_player(username)
     print("player id : ",player_id)
     
-    root.destroy()
-    game(player_id)
+    root.withdraw()
+    final_score ,obstacle = game(player_id)
+    game_over_window(player_id,final_score ,obstacle)
 
 start_button = tk.Button(root, text = "Start Game", command = start_game)
 start_button.pack()
