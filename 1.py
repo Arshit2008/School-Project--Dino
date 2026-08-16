@@ -1,6 +1,7 @@
 import mysql.connector
 import pygame
 import tkinter as tk
+import pickle
 
 DB_host = "localhost"
 DB_user = "root"
@@ -137,8 +138,17 @@ def show_stats():
         
         label = tk.Label(stats,text = text ,font = ("arial",12))
         label.pack()
-    
+
 game_history = []
+game_history_file = "game_history.pkl"
+try:
+    with open(game_history_file ,"rb") as file:
+        game_history = pickle.load(file)
+except:
+    game_history = []
+
+
+
 
 def retry_game(window,player_id):
     window.destroy()
@@ -181,6 +191,11 @@ def game_over_window(player_id,final_score,obstacles):
         command =lambda: retry_game (window,player_id)
     ).pack(pady = 10)
        
+    tk.Button(
+        window,
+        text = "Main Menu",
+        command = lambda : back_to_menu(window)
+    ).pack(pady=5)
        
     tk.Button(
         window,
@@ -188,7 +203,58 @@ def game_over_window(player_id,final_score,obstacles):
         command =lambda: exit_game(window)
     ).pack()
 
-
+def show_history():
+    game_history_file = "game_history.pkl"
+    try:
+        with open(game_history_file,"rb") as file:
+            history = pickle.load (file)
+            
+    except Exception as err:
+        print("History Error:",err)
+        history = []
+    
+    history_window = tk.Toplevel(root)
+    history_window.title("Game History")
+    history_window.geometry("450x300")
+    
+    tk.Label(
+        history_window,
+        text = "Game History",
+        font = ("arial",20,"bold")
+    ).pack(pady = 15)
+    
+    if not history:
+        tk.Label(
+            history_window,
+            text = "No Games Played Yet.",
+            font = ("arial",20)
+        )
+        
+    temp_stack = []
+    
+    while game_history:
+        game = game_history.pop()
+        temp_stack.append(game)
+        
+    for i,game in enumerate(reversed(history),start = 1):
+        final_score = game[0]
+        obstacles = game[1]
+        
+        text = f"Game {i} :score = {final_score}   obstacles = {obstacles}"
+        
+        tk.Label(
+            history_window,
+            text = text,
+            font = ("arial",12)            
+            ).pack(pady=3)
+        
+    while temp_stack:
+        game_history.append (temp_stack.pop())
+        
+        
+def back_to_menu(window):
+    window.destroy()
+    root.deiconify()
 ##############    MAIN _ GAME    ##############
 def game(player_id):
     pygame.init()
@@ -291,10 +357,13 @@ def game(player_id):
             game_history.append((final_score,obstacle))
             print("Game History : ",game_history)
             
-            save_scores(player_id,int(score),obstacle)
+            with open(game_history_file,"wb") as file:
+                pickle.dump(game_history, file)
+            
+            save_scores(player_id,final_score,obstacle)
             run = False
         
-        clock.tick(30)             #refresh rate of the game
+        clock.tick(60)             #refresh rate of the game
     pygame.quit()
     return final_score, obstacle
     
@@ -325,9 +394,8 @@ def start_game():
     final_score ,obstacle = game(player_id)
     game_over_window(player_id,final_score ,obstacle)
 
-start_button = tk.Button(root, text = "Start Game", command = start_game)
-start_button.pack()
-
+tk.Button(root, text = "Start Game", command = start_game).pack(pady = 3)
+tk.Button(root ,text = "Game History",command = show_history).pack(pady = 3)
 tk.Button(root, text = "Stat", command = show_stats).pack()
 
 root.mainloop()
