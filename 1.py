@@ -112,42 +112,65 @@ def save_scores (player_id,score,obs):
 def show_stats():
     mycon = connect()
     c = mycon.cursor()
-    
+
     c.execute("""
-              select username, score ,obstacles from highscores h, player p
-              where p.players_id = h.player_id
-              order by score desc
-              """)
-    results =  c.fetchall()
+        SELECT username, score, obstacles
+        FROM highscores h
+        JOIN player p ON p.players_id = h.player_id
+        ORDER BY score DESC
+    """)
+
+    results = c.fetchall()
     mycon.close()
-    
-    
-    title = tk.Label(root,text = "High-Scores", font = ("arial",18))
-    title.pack(pady=10)
-    
+
     stats = tk.Toplevel(root)
-    stats.title("High-Score")
-    stats.geometry("400x300")
+    stats.title("High-Scores")
+    stats.geometry("500x350")
+
+    tk.Label(
+        stats,
+        text="HIGH-SCORES",
+        font=("Arial", 20, "bold")
+    ).pack(pady=15)
     
-    for i,row in enumerate (results, start = 1):
-        username = row[0]
-        score = row[1]
-        obstacle = row[2]
-        
-        text = f"{i}.{username}    Score :{score}    Obstacles :{obstacle}"
-        
-        label = tk.Label(stats,text = text ,font = ("arial",12))
-        label.pack()
+    heading = tk.Label(
+        stats,
+        text="Rank       Player          Score       Obstacles",
+        font=("Arial", 12, "bold")
+    )
+    heading.pack(pady=5)
 
-game_history = []
-game_history_file = "game_history.pkl"
-try:
-    with open(game_history_file ,"rb") as file:
-        game_history = pickle.load(file)
-except:
-    game_history = []
+    tk.Label(
+        stats,
+        text="-" * 55,
+        font=("Arial", 10)
+    ).pack()
 
+    if not results:
+        tk.Label(
+            stats,
+            text="No scores recorded yet.",
+            font=("Arial", 12)
+        ).pack(pady=15)
 
+    else:
+        for i, row in enumerate(results, start=1):
+            username = row[0]
+            score = row[1]
+            obstacles = row[2]
+
+            text = (
+                f"{i:<10}"
+                f"{username:<15}"
+                f"{score:<12}"
+                f"{obstacles}"
+            )
+
+            tk.Label(
+                stats,
+                text=text,
+                font=("Courier New", 11)
+            ).pack(anchor="w", padx=30, pady=2)
 
 
 def retry_game(window,player_id):
@@ -253,8 +276,18 @@ def show_history():
         
         
 def back_to_menu(window):
+    
     window.destroy()
     root.deiconify()
+    
+game_history_file = "game_history.pkl"
+
+try:
+    with open(game_history_file,"rb")as f:
+        game_history = pickle.load(f)
+except:
+    game_history = []    
+
 ##############    MAIN _ GAME    ##############
 def game(player_id):
     pygame.init()
@@ -313,7 +346,6 @@ def game(player_id):
         velo = velo + gravity
         dino_y = dino_y + velo           #main-calculation for jump and gravity
         cac_x = cac_x - cac_speed
-        
         
         #print ("dino jump position:",dino_y)
 
@@ -404,3 +436,5 @@ mycon = connect()
 c = mycon.cursor()
 c.execute("select * from player")
 print(c.fetchall())
+
+    
