@@ -59,7 +59,7 @@ def register_player(username):
         mycon = connect()
         c = mycon.cursor()
         
-        c.execute("select players_id from player")
+        c.execute("select players_id from player where username = %s",(username,))
         check = c.fetchone()
         
         if check:
@@ -134,14 +134,6 @@ def show_stats():
         label = tk.Label(stats,text = text ,font = ("arial",12))
         label.pack()
     
-def score ():
-    mycon = connect()
-    c= mycon.cursor()
-    
-    c.execute("""SELECT username,score,obstacles FROM highscores,player 
-              WHERE player_id = players_id 
-              ORDER BY score DESC""")
-    print(c.fetchall())
     
 ##############    MAIN _ GAME    ##############
 def game(player_id):
@@ -241,14 +233,17 @@ def game(player_id):
         if dino_rect.colliderect(cactus_rect):
             print("Game Over")
             
-            save_scores(player_id,int(score),obstacle)
+            final_score = int(score)
+            game_history.append((final_score,obstacle))
+            print("Game History : ",game_history)
             
+            save_scores(player_id,int(score),obstacle)
             run = False
         
         clock.tick(60)             #refresh rate of the game
     pygame.quit()
     
-    
+    retry_menu(player_id)
     
 ##############   DB-ON-LOADING  ############## 
 
