@@ -1,6 +1,7 @@
 import mysql.connector
 import pygame
 import tkinter as tk
+import pickle
 
 DB_host = "localhost"
 DB_user = "root"
@@ -111,14 +112,20 @@ def save_scores (player_id,score,obs):
 def show_stats():
     mycon = connect()
     c = mycon.cursor()
-    
+
     c.execute("""
-              select username, score ,obstacles from highscores h, player p
-              where p.players_id = h.player_id
-              order by score desc
-              """)
-    results =  c.fetchall()
+        SELECT username, score, obstacles
+        FROM highscores h
+        JOIN player p ON p.players_id = h.player_id
+        ORDER BY score DESC
+    """)
+
+    results = c.fetchall()
     mycon.close()
+    
+    
+    title = tk.Label(root,text = "High-Scores", font = ("arial",18))
+    title.pack(pady=10)
     
     stats = tk.Toplevel(root)
     stats.title("High-Score")
@@ -133,6 +140,70 @@ def show_stats():
         
         label = tk.Label(stats,text = text ,font = ("arial",12))
         label.pack()
+    
+game_history = []
+
+def retry_game(retry,player_id):
+    retry.destroy()
+    game(player_id)
+
+def retry_menu(player_id):
+    retry = tk.Toplevel()
+    retry.title("Game over")
+    retry.geometry("300x200")
+    
+    tk.Label(
+        retry,text = "Game Over",
+        font = ("Arial",20)
+    ).pack(pady = 20)
+    
+    tk.Button(
+        retry,
+        text = "RETRY",
+        command = retry_game(retry,player_id)
+    ).pack(pady = 20)
+    
+    tk.Button(
+        retry,
+        text = "Retry",
+        command = retry.destroy
+    ).pack(pady = 5)
+
+def game_over_window(player_id,final_score,obstacles):
+    window = tk.Toplevel()
+    window.title("Game Over")
+    window.geometry("350x250")
+    
+    tk.Label(
+        window,
+        text = "Game over",
+        font = ("arial",20)
+    ).pack(pady = 15)
+    
+    tk.Label(
+        window,
+        text = f"Final score: {final_score}",
+        font = ("arial",14)
+    ).pack()
+    
+    tk.Label(
+        window,
+        text = f"Obstacles cleared: {obstacles}",
+        font = ("arial",14)
+    ).pack(pady = 5)
+    
+    tk.Button(
+        window,
+        text = "Retry",
+        command = retry_game (window,player_id)
+    ).pack(pady = 10)
+       
+       
+    tk.Button(
+        window,
+        text = "Exit",
+        command =window.destroy 
+    ).pack()
     
     
 ##############    MAIN _ GAME    ##############
@@ -194,7 +265,6 @@ def game(player_id):
         dino_y = dino_y + velo           #main-calculation for jump and gravity
         cac_x = cac_x - cac_speed
         
-        
         #print ("dino jump position:",dino_y)
 
         score = score + 0.1
@@ -237,13 +307,15 @@ def game(player_id):
             game_history.append((final_score,obstacle))
             print("Game History : ",game_history)
             
-            save_scores(player_id,int(score),obstacle)
+            with open(game_history_file,"wb") as file:
+                pickle.dump(game_history, file)
+            
+            save_scores(player_id,final_score,obstacle)
             run = False
         
         clock.tick(60)             #refresh rate of the game
     pygame.quit()
-    
-    retry_menu(player_id)
+    return final_score, obstacle
     
 ##############   DB-ON-LOADING  ############## 
 
@@ -268,13 +340,14 @@ def start_game():
     player_id = register_player(username)
     print("player id : ",player_id)
     
-    root.destroy()
-    game(player_id)
+    root.withdraw()
+    final_score ,obstacle = game(player_id)
+    game_over_window(player_id,final_score ,obstacle)
 
 start_button = tk.Button(root, text = "Start Game", command = start_game)
 start_button.pack()
 
-tk.Button(root, text = "Scores", command = show_stats).pack()
+tk.Button(root, text = "Stat", command = show_stats).pack()
 
 root.mainloop()
 
@@ -282,5 +355,3 @@ mycon = connect()
 c = mycon.cursor()
 c.execute("select * from player")
 print(c.fetchall())
-
-score()
