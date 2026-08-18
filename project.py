@@ -299,7 +299,7 @@ def game(player_id):
     clock = pygame.time.Clock()  #gamespeed
     run = True
 
-    score = 0.001
+    score = 0.01
     obstacle = 0
 
     dino_h = 50
@@ -309,7 +309,7 @@ def game(player_id):
 
     cac_x = 800
     cac_y = 300
-    cac_w = 25          #cactus dimensions and position
+    cac_w = 25             #cactus dimensions and position
     cac_h = 50
 
     cactus_passed = False
@@ -401,7 +401,7 @@ def game(player_id):
     
 ##############   DB-ON-LOADING  ############## 
 
-reset(DB_)
+#reset(DB_)
 Db()
 
 ##############   TKINTER-MENU   ##############
