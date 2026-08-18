@@ -303,13 +303,13 @@ def game(player_id):
     obstacle = 0
 
     dino_h = 50
-    dino_w = 30           #dino dimensions and position
+    dino_w = 30           
     dino_x = 100
     dino_y = 300
 
     cac_x = 800
     cac_y = 300
-    cac_w = 25             #cactus dimensions and position
+    cac_w = 25             
     cac_h = 50
 
     cactus_passed = False
@@ -318,10 +318,10 @@ def game(player_id):
     cactus_rect = pygame.Rect(cac_x,cac_y,cac_w,cac_h)
 
 
-    ground_y = 350      #Ground level
+    ground_y = 350      
 
     cac_speed = 8
-    velo = 0            #velocity of all
+    velo = 0            
     gravity = 1
     jump = -14
 
@@ -344,10 +344,10 @@ def game(player_id):
 
                     
         velo = velo + gravity
-        dino_y = dino_y + velo           #main-calculation for jump and gravity
+        dino_y = dino_y + velo           
         cac_x = cac_x - cac_speed
         
-        #print ("dino jump position:",dino_y)
+        
 
         score = score + 0.1
         
@@ -376,11 +376,11 @@ def game(player_id):
         obstacles_text = font.render ("obstacles cleared:" + str(obstacle), True, (0,0,0))
         screen.blit(obstacles_text, (5,30))
         
-        pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  #draw the ground
-        pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h))  #draw the dino
-        pygame.draw.rect(screen, (0,150,0), (cac_x,cac_y,cac_w,cac_h))  #draw the cactus
+        pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  
+        pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h)) 
+        pygame.draw.rect(screen, (0,150,0), (cac_x,cac_y,cac_w,cac_h))  
         
-        pygame.display.update()  #update the screen with the new drawings
+        pygame.display.update()                                        
         
         if dino_rect.colliderect(cactus_rect):
             print("Game Over")
@@ -436,5 +436,3 @@ mycon = connect()
 c = mycon.cursor()
 c.execute("select * from player")
 print(c.fetchall())
-
-    
