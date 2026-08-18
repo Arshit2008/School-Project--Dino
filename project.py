@@ -287,6 +287,24 @@ try:
         game_history = pickle.load(f)
 except:
     game_history = []    
+    
+    
+##############      STACK        ##############
+
+def load_stack():
+    try:
+        with open(game_history_file,"rb") as file:
+            return pickle.load (file)
+    except :
+        return []
+    
+def stack_file():
+    try:
+        with open(game_history_file,"wb")as f:
+            pickle.dump(game_history,f)
+    except:
+        print("error")
+    
 
 ##############    MAIN _ GAME    ##############
 def game(player_id):
