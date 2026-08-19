@@ -6,7 +6,9 @@ import pickle
 DB_host = "localhost"
 DB_user = "root"
 DB_password = "computer"
-DB_ = input("Database Name: ")
+DB_ = input ("Database Name: ")
+
+##########    CONNECTION FUNCTION    ##########
 
 def connect():
     try:
@@ -14,6 +16,8 @@ def connect():
     except Exception as err:
         print("DATABASE CONNNECTION ERROR :",err)
     return m
+
+##########    DATBASE    ##########
 
 def reset(DB_):
     try:    
@@ -184,6 +188,7 @@ def exit_game(window):
     window.destroy()
     root.destroy()
     
+##########    GAME_OVER    ##########
 
 def game_over_window(player_id,final_score,obstacles):
     window = tk.Toplevel()
@@ -288,25 +293,9 @@ try:
 except:
     game_history = []    
     
-    
-##############      STACK        ##############
 
-def load_stack():
-    try:
-        with open(game_history_file,"rb") as file:
-            return pickle.load (file)
-    except :
-        return []
-    
-def stack_file():
-    try:
-        with open(game_history_file,"wb")as f:
-            pickle.dump(game_history,f)
-    except:
-        print("error")
-    
+##############    MAIN___GAME    ##############
 
-##############    MAIN _ GAME    ##############
 def game(player_id):
     pygame.init()
     width = 800 
