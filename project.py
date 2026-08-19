@@ -33,7 +33,7 @@ def Db():
         mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
         c=mycon.cursor()
         
-        c.execute("create database if not exists GAME")
+        c.execute(f"create database if not exists {DB_}")
         c.execute (f"use {DB_}")
         
         c.execute("""create table if not exists player(
@@ -341,7 +341,7 @@ def game(player_id):
     cac_speed = 8
     velo = 0            
     gravity = 1
-    jump = -14
+    jump = -13
 
     font = pygame.font.Font(None, 36)
 
@@ -366,7 +366,6 @@ def game(player_id):
         cac_x = cac_x - cac_speed
         
         
-
         score = score + 0.1
         
         if (cac_x + cac_w) < dino_x and cactus_passed == False:
@@ -413,7 +412,7 @@ def game(player_id):
             save_scores(player_id,final_score,obstacle)
             run = False
         
-        clock.tick(45)             #refresh rate of the game
+        clock.tick(60)             #refresh rate of the game
     pygame.quit()
     return final_score, obstacle
     
