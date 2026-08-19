@@ -395,7 +395,7 @@ def game(player_id):
             save_scores(player_id,final_score,obstacle)
             run = False
         
-        clock.tick(60)             #refresh rate of the game
+        clock.tick(45)             #refresh rate of the game
     pygame.quit()
     return final_score, obstacle
     
