@@ -7,7 +7,9 @@ import random
 DB_host = "localhost"
 DB_user = "root"
 DB_password = "computer"
-DB_ = input("Database Name: ")
+DB_ = input ("Database Name: ")
+
+##########    CONNECTION FUNCTION    ##########
 
 def connect():
     try:
@@ -15,6 +17,8 @@ def connect():
     except Exception as err:
         print("DATABASE CONNNECTION ERROR :",err)
     return m
+
+##########    DATBASE    ##########
 
 def reset(DB_):
     try:    
@@ -34,7 +38,7 @@ def Db():
         mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
         c=mycon.cursor()
         
-        c.execute("create database if not exists GAME")
+        c.execute(f"create database if not exists {DB_}")
         c.execute (f"use {DB_}")
         
         c.execute("""create table if not exists player(
@@ -185,6 +189,7 @@ def exit_game(window):
     window.destroy()
     root.destroy()
     
+##########    GAME_OVER    ##########
 
 def game_over_window(player_id,final_score,obstacles):
     window = tk.Toplevel()
@@ -289,25 +294,9 @@ try:
 except:
     game_history = []    
     
-    
-##############      STACK        ##############
 
-def load_stack():
-    try:
-        with open(game_history_file,"rb") as file:
-            return pickle.load (file)
-    except :
-        return []
-    
-def stack_file():
-    try:
-        with open(game_history_file,"wb")as f:
-            pickle.dump(game_history,f)
-    except:
-        print("error")
-    
+##############    MAIN___GAME    ##############
 
-##############    MAIN _ GAME    ##############
 def game(player_id):
     pygame.init()
     width = 800 
@@ -320,19 +309,31 @@ def game(player_id):
 
     score = 0.01
     obstacle = 0
+    final_score = 0
+    
+    cactuses = [pygame.Rect(width, 300, 25, 50)]
+    cactus_spawn_interval = 10
+    next_cactus_score = cactus_spawn_interval
+    cactus_count = 1
+    next_difficulty_score = 100
+    max_cactuses_per_wave = 4
+    cactus_spacing = 180
+    next_cactus_x = width + cactus_spacing
 
     dino_h = 50
     dino_w = 30           
     dino_x = 100
     dino_y = 300
 
-    cactus_list = []
-    cac_speed = 8
-    
-    spawn_timer = 0 
-    next_spawn_time = random.randint(60,110)
+    cac_x = 800
+    cac_y = 300
+    cac_w = 25             
+    cac_h = 50
+
+    cactus_passed = False
 
     dino_rect = pygame.Rect(dino_x,dino_y,dino_w,dino_h)
+    cactus_rect = pygame.Rect(cac_x,cac_y,cac_w,cac_h)
 
 
     ground_y = 350      
@@ -340,7 +341,7 @@ def game(player_id):
     cac_speed = 8
     velo = 0            
     gravity = 1
-    jump = -14
+    jump = -13
 
     font = pygame.font.Font(None, 36)
 
@@ -362,12 +363,15 @@ def game(player_id):
                     
         velo = velo + gravity
         dino_y = dino_y + velo           
+        cac_x = cac_x - cac_speed
         
         
-
+        
         score = score + 0.1
         
-        
+        if (cac_x + cac_w) < dino_x and cactus_passed == False:
+            obstacle = obstacle + 1
+            cactus_passed = True
         
         dino_rect.x= dino_x
         dino_rect.y= dino_y
@@ -376,6 +380,10 @@ def game(player_id):
             dino_y = ground_y - dino_h
             velo = 0
 
+        if cac_x < 0:
+            cac_x = 800
+            cactus_passed = False    
+                
         screen.fill((255,255,255))
         
         score_text = font.render ("score:" + str(int(score)), True, (0,0,0))
@@ -386,59 +394,24 @@ def game(player_id):
         
         pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  
         pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h)) 
-        
-        for c in cactus_list:
-            pygame.draw.rect(screen,(0,150,0),c[0])
+        pygame.draw.rect(screen, (0,150,0), (cac_x,cac_y,cac_w,cac_h))  
         
         pygame.display.update()                                        
         
-        spawn_timer +=1
+        if dino_rect.colliderect(cactus_rect):
+            print("Game Over")
+            
+            final_score = int(score)
+            game_history.append((final_score,obstacle))
+            print("Game History : ",game_history)
+            
+            with open(game_history_file,"wb") as file:
+                pickle.dump(game_history, file)
+            
+            save_scores(player_id,final_score,obstacle)
+            run = False
         
-        if spawn_timer >= next_spawn_time:
-            c_type = random.randint(1,3)
-            
-            if c_type == 1: 
-                cac_width ,cac_height= 30,40
-                
-            if c_type == 2: 
-                cac_width ,cac_height=25,60 
-                 
-            else: 
-                cac_width ,cac_height=30,35
-                
-            
-            new_cactus = pygame.Rect(width,ground_y - cac_height, cac_width, cac_height)
-            cactus_list.append([new_cactus,False])
-            
-            spawn_timer =0
-            next_spawn_time = random.randint(65,120)
-        
-        for c in cactus_list:
-            c_rect = c[0]
-            c_rect.x -= cac_speed
-            
-            if(c_rect.x + cac_width) < dino_x and c[1] == False :
-                obstacle += 1
-                
-                c[1] = True
-                
-            if dino_rect.colliderect(c_rect):
-                print("Game Over")
-                final_score = int(score)
-                game_history.append((final_score,obstacle))
-                
-                with open(game_history_file,"wb") as file:
-                    pickle.dump(game_history,file)
-                    
-                save_scores(player_id,final_score,obstacle)
-                run = False
-                break 
-            
-            if c_rect.right < 0 :
-                cactus_list.remove(c)
-                
-        
-        clock.tick(60)             #refresh rate of the game
+        clock.tick(120)             #refresh rate of the game
     pygame.quit()
     return final_score, obstacle
     
