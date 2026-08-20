@@ -308,23 +308,23 @@ def game(player_id):
 
     score = 0.01
     obstacle = 0
+    final_score = 0
+    
+    cactuses = [pygame.Rect(width, 300, 25, 50)]
+    cactus_spawn_interval = 10
+    next_cactus_score = cactus_spawn_interval
+    cactus_count = 1
+    next_difficulty_score = 100
+    max_cactuses_per_wave = 4
+    cactus_spacing = 180
+    next_cactus_x = width + cactus_spacing
 
     dino_h = 50
     dino_w = 30           
     dino_x = 100
     dino_y = 300
 
-    cac_x = 800
-    cac_y = 300
-    cac_w = 25             
-    cac_h = 50
-
-    cactus_passed = False
-
     dino_rect = pygame.Rect(dino_x,dino_y,dino_w,dino_h)
-    cactus_rect = pygame.Rect(cac_x,cac_y,cac_w,cac_h)
-
-
     ground_y = 350      
 
     cac_speed = 8
@@ -352,27 +352,34 @@ def game(player_id):
                     
         velo = velo + gravity
         dino_y = dino_y + velo           
-        cac_x = cac_x - cac_speed
         
         
         score = score + 0.1
-        
-        if (cac_x + cac_w) < dino_x and cactus_passed == False:
-            obstacle = obstacle + 1
-            cactus_passed = True
+
+        # Spawn regular waves and increase the wave size over time.
+        while score >= next_cactus_score:
+            if score >= next_difficulty_score:
+                cactus_count = min(cactus_count + 1, max_cactuses_per_wave)
+                next_difficulty_score += 100
+
+            for _ in range(cactus_count):
+                cactuses.append(pygame.Rect(next_cactus_x, 300, 25, 50))
+                next_cactus_x += cactus_spacing
+
+            next_cactus_score += cactus_spawn_interval
+
+        # Move all cactuses
+        for cactus in cactuses:
+            cactus.x -= cac_speed
         
         dino_rect.x= dino_x
         dino_rect.y= dino_y
-        cactus_rect.x= cac_x
-        cactus_rect.y= cac_y
         
         if dino_y >= ground_y - dino_h:
             dino_y = ground_y - dino_h
             velo = 0
 
-        if cac_x < 0:
-            cac_x = 800
-            cactus_passed = False    
+
                 
         screen.fill((255,255,255))
         
@@ -384,24 +391,47 @@ def game(player_id):
         
         pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  
         pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h)) 
-        pygame.draw.rect(screen, (0,150,0), (cac_x,cac_y,cac_w,cac_h))  
-        
+        for cactus in cactuses:
+            pygame.draw.rect(
+                screen,
+                (0, 150, 0),
+                cactus
+            )
+            
         pygame.display.update()                                        
+        passed_cactuses = []
+        for cactus in cactuses:
+            if dino_rect.colliderect(cactus):
+                print("Game Over")
+
+                final_score = int(score)
+
+                game_history.append(
+                    (final_score, obstacle)
+                )
+
+                print("Game History : ", game_history)
+
+                with open(game_history_file, "wb") as file:
+                    pickle.dump(game_history, file)
+
+                save_scores(
+                    player_id,
+                    final_score,
+                    obstacle
+                )
+
+                run = False
+                break
+
+            if cactus.right < dino_x:
+                obstacle += 1
+                passed_cactuses.append(cactus)
+
+        for cactus in passed_cactuses:
+            cactuses.remove(cactus)
         
-        if dino_rect.colliderect(cactus_rect):
-            print("Game Over")
-            
-            final_score = int(score)
-            game_history.append((final_score,obstacle))
-            print("Game History : ",game_history)
-            
-            with open(game_history_file,"wb") as file:
-                pickle.dump(game_history, file)
-            
-            save_scores(player_id,final_score,obstacle)
-            run = False
-        
-        clock.tick(60)             #refresh rate of the game
+        clock.tick(120)             #refresh rate of the game
     pygame.quit()
     return final_score, obstacle
     
