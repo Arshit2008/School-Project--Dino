@@ -11,109 +11,169 @@ DB_ = input("Database Name: ")
 
 def connect():
     try:
-        m = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password, database = DB_)
+        m = mysql.connector.connect(
+            host=DB_host,
+            user=DB_user,
+            password=DB_password,
+            database=DB_
+        )
+        return m
     except Exception as err:
-        print("DATABASE CONNNECTION ERROR :",err)
-    return m
+        print("DATABASE CONNECTION ERROR:", err)
+        return None
+
 
 def reset(DB_):
-    try:    
-        mycon = connect()
+    mycon = None
+    try:
+        # Connect without selecting the database
+        mycon = mysql.connector.connect(
+            host=DB_host,
+            user=DB_user,
+            password=DB_password
+        )
+
         c = mycon.cursor()
-        a = DB_
-    
-        c.execute(f"DROP DATABASE IF EXISTS {a}")
-        print("Database deleted !")
+        c.execute(f"DROP DATABASE IF EXISTS {DB_}")
+        print("Database deleted!")
+
     except Exception as err:
         print(f"Database delete error: {err}")
+
     finally:
-        mycon.close()
+        if mycon:
+            mycon.close()
 
 def Db():
+    mycon = None
+
     try:
-        mycon = mysql.connector.connect (host = DB_host, user = DB_user, password = DB_password)
-        c=mycon.cursor()
-        
-        c.execute("create database if not exists GAME")
-        c.execute (f"use {DB_}")
-        
-        c.execute("""create table if not exists player(
-            players_id int primary key auto_increment,
-            username varchar(20) unique not null
-        )""")
-        
-        c.execute("""create table if not exists highscores(
-            score_id int primary key auto_increment,
-            player_id int,
-            score int not null,
-            obstacles int not null,
-            foreign key(player_id) references player(players_id) on delete cascade
-            )""")
-        
-        mycon.commit()  
-        mycon.close()
+        mycon = mysql.connector.connect(
+            host=DB_host,
+            user=DB_user,
+            password=DB_password
+        )
+        c = mycon.cursor()
+
+        c.execute(f"CREATE DATABASE IF NOT EXISTS {DB_}")
+        c.execute(f"USE {DB_}")
+
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS player(
+                players_id INT PRIMARY KEY AUTO_INCREMENT,
+                username VARCHAR(20) UNIQUE NOT NULL
+            )
+        """)
+
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS highscores(
+                score_id INT PRIMARY KEY AUTO_INCREMENT,
+                player_id INT,
+                score INT NOT NULL,
+                obstacles INT NOT NULL,
+                FOREIGN KEY(player_id)
+                REFERENCES player(players_id)
+                ON DELETE CASCADE
+            )
+        """)
+
+        mycon.commit()
         print("All databases made")
+
     except Exception as err:
-        print("Error is : ",err)
-        
+        print("Error is:", err)
+
+    finally:
+        if mycon:
+            mycon.close()
+
+
 def register_player(username):
+    mycon = None
     try:
         mycon = connect()
+        if mycon is None:
+            return None
         c = mycon.cursor()
-        
-        c.execute("select players_id from player where username = %s",(username,))
+
+        c.execute(
+            "SELECT players_id FROM player WHERE username = %s",
+            (username,)
+        )
+
         check = c.fetchone()
-        
         if check:
             player_id = check[0]
-            print("player exists")
-        else:
-        
-            c.execute (" insert into player(username) values(%s)", (username,) )
-            player_id = c.lastrowid
-        
-            print("New Player")
-            mycon.commit()
-        mycon.close()
-        return player_id
-    
-    except Exception as err:
-            print("Error is : ",err)
+            print("Player exists")
 
-def save_scores (player_id,score,obs):
+        else:
+            c.execute(
+                "INSERT INTO player(username) VALUES(%s)",
+                (username,)
+            )
+
+            player_id = c.lastrowid
+            print("New Player")
+
+            mycon.commit()
+        return player_id
+
+    except Exception as err:
+        print("Error is:", err)
+        return None
+
+    finally:
+        if mycon:
+            mycon.close()
+
+
+def save_scores(player_id, score, obs):
+    mycon = None
     try:
         mycon = connect()
+        if mycon is None:
+            return
         c = mycon.cursor()
-        
-        c.execute(f"select score from highscores where player_id = {player_id}")
+        c.execute(
+            "SELECT score FROM highscores WHERE player_id = %s",
+            (player_id,)
+        )
+
         result = c.fetchone()
-        
         if result:
             score_old = result[0]
-            if score_old>score:
-                print(f"Old Score Higher :{score_old}")
-                
+            if score_old > score:
+                print(f"Old Score Higher: {score_old}")
             else:
-                c.execute(f"""
-                        UPDATE highscores
-                        set score = {score} ,obstacles = {obs}
-                        where player_id = {player_id}
-                        """)
-                print("New Highscore !")
+                c.execute("""
+                    UPDATE highscores
+                    SET score = %s, obstacles = %s
+                    WHERE player_id = %s
+                """, (score, obs, player_id))
+
+                print("New Highscore!")
+
         else:
-            c.execute ("INSERT INTO highscores(player_id,score,obstacles) values(%s,%s,%s)",(player_id,score,obs))    
-            
+
+            c.execute("""
+                INSERT INTO highscores(player_id, score, obstacles)
+                VALUES(%s, %s, %s)
+            """, (player_id, score, obs))
+
         mycon.commit()
-        mycon.close()
-        
+
     except Exception as err:
-        print("Error is : ",err)
-        
-        
+        print("Error is:", err)
+    finally:
+        if mycon:
+            mycon.close()
+
+
 def show_stats():
     mycon = connect()
+    if mycon is None:
+        return
     c = mycon.cursor()
-
     c.execute("""
         SELECT username, score, obstacles
         FROM highscores h
@@ -133,14 +193,13 @@ def show_stats():
         text="HIGH-SCORES",
         font=("Arial", 20, "bold")
     ).pack(pady=15)
-    
+
     heading = tk.Label(
         stats,
         text="Rank       Player          Score       Obstacles",
         font=("Arial", 12, "bold")
     )
     heading.pack(pady=5)
-
     tk.Label(
         stats,
         text="-" * 55,
@@ -153,20 +212,18 @@ def show_stats():
             text="No scores recorded yet.",
             font=("Arial", 12)
         ).pack(pady=15)
-
     else:
         for i, row in enumerate(results, start=1):
+
             username = row[0]
             score = row[1]
             obstacles = row[2]
-
             text = (
                 f"{i:<10}"
                 f"{username:<15}"
                 f"{score:<12}"
                 f"{obstacles}"
             )
-
             tk.Label(
                 stats,
                 text=text,
@@ -174,305 +231,412 @@ def show_stats():
             ).pack(anchor="w", padx=30, pady=2)
 
 
-def retry_game(window,player_id):
+def retry_game(window, player_id):
     window.destroy()
-    final_score,obstacles = game(player_id)
-    game_over_window(player_id,final_score,obstacles)
-    
+    final_score, obstacles = game(player_id)
+    game_over_window(
+        player_id,
+        final_score,
+        obstacles
+    )
 
 
 def exit_game(window):
     window.destroy()
     root.destroy()
-    
 
-def game_over_window(player_id,final_score,obstacles):
+def game_over_window(player_id, final_score, obstacles):
     window = tk.Toplevel()
     window.title("Game Over")
     window.geometry("350x250")
-    
     tk.Label(
         window,
-        text = "Game over",
-        font = ("arial",20)
-    ).pack(pady = 15)
-    
+        text="Game Over",
+        font=("Arial", 20)
+    ).pack(pady=15)
     tk.Label(
         window,
-        text = f"Final score: {final_score}",
-        font = ("arial",14)
+        text=f"Final score: {final_score}",
+        font=("Arial", 14)
     ).pack()
-    
     tk.Label(
         window,
-        text = f"Obstacles cleared: {obstacles}",
-        font = ("arial",14)
-    ).pack(pady = 5)
-    
-    tk.Button(
-        window,
-        text = "Retry",
-        command =lambda: retry_game (window,player_id)
-    ).pack(pady = 10)
-       
-    tk.Button(
-        window,
-        text = "Main Menu",
-        command = lambda : back_to_menu(window)
+        text=f"Obstacles cleared: {obstacles}",
+        font=("Arial", 14)
     ).pack(pady=5)
-       
     tk.Button(
         window,
-        text = "Exit",
-        command =lambda: exit_game(window)
+        text="Retry",
+        command=lambda: retry_game(
+            window,
+            player_id
+        )
+    ).pack(pady=10)
+
+    tk.Button(
+        window,
+        text="Main Menu",
+        command=lambda: back_to_menu(window)
+    ).pack(pady=5)
+
+    tk.Button(
+        window,
+        text="Exit",
+        command=lambda: exit_game(window)
     ).pack()
 
+
+
+
+game_history_file = "game_history.pkl"
+try:
+
+    with open(game_history_file, "rb") as f:
+        game_history = pickle.load(f)
+except:
+    game_history = []
 def show_history():
-    game_history_file = "game_history.pkl"
     try:
-        with open(game_history_file,"rb") as file:
-            history = pickle.load (file)
-            
+        with open(game_history_file, "rb") as file:
+            history = pickle.load(file)
     except Exception as err:
-        print("History Error:",err)
+        print("History Error:", err)
         history = []
-    
     history_window = tk.Toplevel(root)
     history_window.title("Game History")
     history_window.geometry("450x300")
-    
     tk.Label(
         history_window,
-        text = "Game History",
-        font = ("arial",20,"bold")
-    ).pack(pady = 15)
-    
+        text="Game History",
+        font=("Arial", 20, "bold")
+    ).pack(pady=15)
+
     if not history:
         tk.Label(
             history_window,
-            text = "No Games Played Yet.",
-            font = ("arial",20)
+            text="No Games Played Yet.",
+            font=("Arial", 14)
+        ).pack(pady=10)
+        return
+
+    for i, game_data in enumerate(
+        reversed(history),
+        start=1
+    ):
+        final_score = game_data[0]
+        obstacles = game_data[1]
+        text = (
+            f"Game {i}: "
+            f"score = {final_score}   "
+            f"obstacles = {obstacles}"
         )
-        
-    temp_stack = []
-    
-    while game_history:
-        game = game_history.pop()
-        temp_stack.append(game)
-        
-    for i,game in enumerate(reversed(history),start = 1):
-        final_score = game[0]
-        obstacles = game[1]
-        
-        text = f"Game {i} :score = {final_score}   obstacles = {obstacles}"
-        
         tk.Label(
             history_window,
-            text = text,
-            font = ("arial",12)            
-            ).pack(pady=3)
-        
-    while temp_stack:
-        game_history.append (temp_stack.pop())
-        
-        
+            text=text,
+            font=("Arial", 12)
+        ).pack(pady=3)
+
 def back_to_menu(window):
-    
+
     window.destroy()
     root.deiconify()
-    
-game_history_file = "game_history.pkl"
 
-try:
-    with open(game_history_file,"rb")as f:
-        game_history = pickle.load(f)
-except:
-    game_history = []    
-    
-    
-##############      STACK        ##############
 
 def load_stack():
     try:
-        with open(game_history_file,"rb") as file:
-            return pickle.load (file)
-    except :
+        with open(game_history_file, "rb") as file:
+            return pickle.load(file)
+    except:
         return []
-    
+
+
 def stack_file():
     try:
-        with open(game_history_file,"wb")as f:
-            pickle.dump(game_history,f)
+        with open(game_history_file, "wb") as f:
+            pickle.dump(game_history, f)
     except:
-        print("error")
-    
+        print("Error saving history")
 
-##############    MAIN _ GAME    ##############
+
 def game(player_id):
     pygame.init()
-    width = 800 
+    width = 800
     height = 400
-    
-    screen = pygame.display.set_mode((width,height)) #window dimensions
-    pygame.display.set_caption("game")
-    clock = pygame.time.Clock()  #gamespeed
+    screen = pygame.display.set_mode(
+        (width, height)
+    )
+    pygame.display.set_caption("Dino Game")
+    clock = pygame.time.Clock()
     run = True
-
     score = 0.01
     obstacle = 0
 
     dino_h = 50
-    dino_w = 30           
+    dino_w = 30
+
     dino_x = 100
     dino_y = 300
 
+    dino_rect = pygame.Rect(
+        dino_x,
+        dino_y,
+        dino_w,
+        dino_h
+    )
+    ground_y = 350
     cactus_list = []
     cac_speed = 8
+    speed_increase_every = 5
+
     
-    spawn_timer = 0 
-    next_spawn_time = random.randint(60,110)
+    speed_increase_amount = 2
+    spawn_timer = 0
+    next_spawn_time = random.randint(
+        60,
+        110
+    )
 
-    dino_rect = pygame.Rect(dino_x,dino_y,dino_w,dino_h)
-
-
-    ground_y = 350      
-
-    cac_speed = 8
-    velo = 0            
+    velo = 0
     gravity = 1
     jump = -14
+    font = pygame.font.Font(
+        None,
+        36
+    )
 
-    font = pygame.font.Font(None, 36)
+    final_score = 0
+    while run:
 
-    while run :
         for event in pygame.event.get():
-            
-                if event.type == pygame.KEYDOWN:
-            
-                    if event.key == pygame.K_SPACE:
-                        # print(event.key)
-            
-                        if dino_y >= ground_y - dino_h:
-                            velo = jump
-            
-                if event.type == pygame.KEYDOWN :
-                        if event.key == pygame.K_ESCAPE:
-                            run = False
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if dino_y >= ground_y - dino_h:
+                        velo = jump
+                if event.key == pygame.K_ESCAPE:
+                    run = False
 
-                    
         velo = velo + gravity
-        dino_y = dino_y + velo           
-        
-
-        score = score + 0.1
-        
-        
-        dino_rect.x= dino_x
-        dino_rect.y= dino_y
-        
+        dino_y = dino_y + velo
         if dino_y >= ground_y - dino_h:
             dino_y = ground_y - dino_h
             velo = 0
 
-        screen.fill((255,255,255))
-        
-        score_text = font.render ("score:" + str(int(score)), True, (0,0,0))
-        screen.blit(score_text, (5,5))
-        
-        obstacles_text = font.render ("obstacles cleared:" + str(obstacle), True, (0,0,0))
-        screen.blit(obstacles_text, (5,30))
-        
-        pygame.draw.line(screen, (0,0,0), (0,ground_y), (width,ground_y), 3)  
-        pygame.draw.rect(screen, (0,0,0), (dino_x,dino_y,dino_w,dino_h)) 
-        
+        score = score + 0.1
+
+        dino_rect.x = dino_x
+        dino_rect.y = dino_y
+
+        screen.fill(
+            (255, 255, 255)
+        )
+
+        score_text = font.render(
+            "Score: " + str(int(score)),
+            True,
+            (0, 0, 0)
+        )
+
+        screen.blit(
+            score_text,
+            (5, 5)
+        )
+        obstacles_text = font.render(
+            "Obstacles cleared: " + str(obstacle),
+            True,
+            (0, 0, 0)
+        )
+        screen.blit(
+            obstacles_text,
+            (5, 40)
+        )
+        speed_text = font.render(
+            "Speed: " + str(cac_speed),
+            True,
+            (0, 0, 0)
+        )
+        screen.blit(
+            speed_text,
+            (5, 75)
+        )
+
+
+        pygame.draw.line(
+            screen,
+            (0, 0, 0),
+            (0, ground_y),
+            (width, ground_y),
+            3
+        )
+        pygame.draw.rect(
+            screen,
+            (0, 0, 0),
+            (
+                dino_x,
+                dino_y,
+                dino_w,
+                dino_h
+            )
+        )
+
         for c in cactus_list:
-            pygame.draw.rect(screen,(0,150,0),c[0])
-        
-        pygame.display.update()                                        
-        
-        spawn_timer +=1
-        
+            pygame.draw.rect(
+                screen,
+                (0, 150, 0),
+                c[0]
+            )
+        pygame.display.update()
+
+        spawn_timer += 1
         if spawn_timer >= next_spawn_time:
-            c_type = random.randint(1,3)
-            
-            if c_type == 1: 
-                cac_width ,cac_height= 15,25
-                
-            if c_type == 2: 
-                cac_width ,cac_height=25,60
-                 
-            else: 
-                cac_width ,cac_height=45,40
-                
-            
-            new_cactus = pygame.Rect(width,ground_y - cac_height, cac_width, cac_height)
-            cactus_list.append([new_cactus,False])
-            
-            spawn_timer =0
-            next_spawn_time = random.randint(65,120)
-        
+            c_type = random.randint(1, 3)
+            if c_type == 1:
+                cac_width = 15
+                cac_height = 25
+            elif c_type == 2:
+                cac_width = 25
+                cac_height = 60
+            else:
+                cac_width = 45
+                cac_height = 40
+            new_cactus = pygame.Rect(
+                width,
+                ground_y - cac_height,
+                cac_width,
+                cac_height
+            )
+            cactus_list.append(
+                [new_cactus, False]
+            )
+            spawn_timer = 0
+            next_spawn_time = random.randint(
+                65,
+                120
+            )
         for c in cactus_list:
             c_rect = c[0]
             c_rect.x -= cac_speed
-            
-            if(c_rect.x + cac_width) < dino_x and c[1] == False :
+
+            if (
+                c_rect.right < dino_x
+                and c[1] is False
+            ):
                 obstacle += 1
-                
                 c[1] = True
-                
+
+                if obstacle % speed_increase_every == 0:
+                    cac_speed += speed_increase_amount
+                    print(
+                        "Speed increased!"
+                    )
+                    print(
+                        "New speed:",
+                        cac_speed
+                    )
+
             if dino_rect.colliderect(c_rect):
                 print("Game Over")
                 final_score = int(score)
-                game_history.append((final_score,obstacle))
-                
-                with open(game_history_file,"wb") as file:
-                    pickle.dump(game_history,file)
-                    
-                save_scores(player_id,final_score,obstacle)
+
+                game_history.append(
+                    (
+                        final_score,
+                        obstacle
+                    )
+                )
+                with open(
+                    game_history_file,
+                    "wb"
+                ) as file:
+                    pickle.dump(
+                        game_history,
+                        file
+                    )
+
+                save_scores(
+                    player_id,
+                    final_score,
+                    obstacle
+                )
                 run = False
-                break 
-            
-            if c_rect.right < 0 :
-                cactus_list.remove(c)        
-        
-        clock.tick(90)            
+                break
+
+            if c_rect.right < 0:
+
+                if c in cactus_list:
+
+                    cactus_list.remove(c)
+        clock.tick(90)
     pygame.quit()
     return final_score, obstacle
-    
-##############   DB-ON-LOADING  ############## 
 
-#reset(DB_)
 Db()
 
-##############   TKINTER-MENU   ##############
 root = tk.Tk()
 root.title("Dino Game")
 root.geometry("400x250")
 
-username_label = tk.Label(root , text = "Enter Username: ")    
+username_label = tk.Label(
+    root,
+    text="Enter Username:"
+)
 username_label.pack()
-
 username_entry = tk.Entry(root)
 username_entry.pack()
 
 def start_game():
-    username = username_entry.get()
-    print("Username:", username)
-    
-    player_id = register_player(username)
-    print("player id : ",player_id)
-    
+    username = username_entry.get().strip()
+    if username == "":
+        print("Please enter a username.")
+        return
+    print(
+        "Username:",
+        username
+    )
+    player_id = register_player(
+        username
+    )
+    if player_id is None:
+        return
+    print(
+        "Player ID:",
+        player_id
+    )
     root.withdraw()
-    final_score ,obstacle = game(player_id)
-    game_over_window(player_id,final_score ,obstacle)
+    final_score, obstacle = game(
+        player_id
+    )
+    game_over_window(
+        player_id,
+        final_score,
+        obstacle
+    )
+tk.Button(
+    root,
+    text="Start Game",
+    command=start_game
+).pack(pady=3)
 
-tk.Button(root, text = "Start Game", command = start_game).pack(pady = 3)
-tk.Button(root ,text = "Game History",command = show_history).pack(pady = 3)
-tk.Button(root, text = "Stat", command = show_stats).pack()
+tk.Button(
+    root,
+    text="Game History",
+    command=show_history
+).pack(pady=3)
 
+tk.Button(
+    root,
+    text="Stats",
+    command=show_stats
+).pack()
 root.mainloop()
-
 mycon = connect()
-c = mycon.cursor()
-c.execute("select * from player")
-print(c.fetchall())
+if mycon:
+    c = mycon.cursor()
+    c.execute(
+        "SELECT * FROM player"
+    )
+    print(
+        c.fetchall()
+    )
+    mycon.close()
