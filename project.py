@@ -363,10 +363,8 @@ def game(player_id):
         velo = velo + gravity
         dino_y = dino_y + velo           
         
-        
 
         score = score + 0.1
-        
         
         
         dino_rect.x= dino_x
@@ -435,8 +433,7 @@ def game(player_id):
                 break 
             
             if c_rect.right < 0 :
-                cactus_list.remove(c)
-                
+                cactus_list.remove(c)        
         
         clock.tick(90)            
     pygame.quit()
