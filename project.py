@@ -383,10 +383,14 @@ def game(player_id):
         dino_w,
         dino_h
     )
+    
+    cac_speed = 6
+    max_speed = 30
+    speed_increase_amount=1.5
+    speed_increase_every = 5
+    
     ground_y = 350
     cactus_list = []
-    cac_speed = 8
-    speed_increase_every = 5
 
     
     speed_increase_amount = 2
@@ -405,6 +409,12 @@ def game(player_id):
     )
 
     final_score = 0
+    
+    def get_next_spawn_interval(current_speed):
+        min_frame = max(28,int(450 / current_speed))
+        max_frame = max(45,int(750 / current_speed))
+        return random.randint(min_frame , max_frame)
+    
     while run:
 
         for event in pygame.event.get():
@@ -510,10 +520,7 @@ def game(player_id):
                 [new_cactus, False]
             )
             spawn_timer = 0
-            next_spawn_time = random.randint(
-                65,
-                120
-            )
+            next_spawn_time = get_next_spawn_interval(cac_speed)
         for c in cactus_list:
             c_rect = c[0]
             c_rect.x -= cac_speed
@@ -525,14 +532,11 @@ def game(player_id):
                 obstacle += 1
                 c[1] = True
 
-                if obstacle % speed_increase_every == 0:
+                if obstacle % speed_increase_every == 0 and cac_speed < max_speed:
                     cac_speed += speed_increase_amount
                     print(
-                        "Speed increased!"
-                    )
-                    print(
-                        "New speed:",
-                        cac_speed
+                        "Speed increased!","New speed:",
+                                                cac_speed
                     )
 
             if dino_rect.colliderect(c_rect):
@@ -567,10 +571,11 @@ def game(player_id):
                 if c in cactus_list:
 
                     cactus_list.remove(c)
-        clock.tick(90)
+        clock.tick(60)
     pygame.quit()
     return final_score, obstacle
 
+reset(DB_)
 Db()
 
 root = tk.Tk()
