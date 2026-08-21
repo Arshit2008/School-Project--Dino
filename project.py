@@ -398,13 +398,13 @@ def game(player_id):
             c_type = random.randint(1,3)
             
             if c_type == 1: 
-                cac_width ,cac_height= 30,40
+                cac_width ,cac_height= 15,25
                 
             if c_type == 2: 
-                cac_width ,cac_height=25,60 
+                cac_width ,cac_height=25,60
                  
             else: 
-                cac_width ,cac_height=30,35
+                cac_width ,cac_height=45,40
                 
             
             new_cactus = pygame.Rect(width,ground_y - cac_height, cac_width, cac_height)
@@ -438,7 +438,7 @@ def game(player_id):
                 cactus_list.remove(c)
                 
         
-        clock.tick(60)             #refresh rate of the game
+        clock.tick(90)            
     pygame.quit()
     return final_score, obstacle
     
