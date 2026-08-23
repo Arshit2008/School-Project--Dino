@@ -1,7 +1,6 @@
 import mysql.connector
 import pygame
 import tkinter as tk
-import pickle
 import random
 
 DB_host = "localhost"
@@ -26,10 +25,8 @@ def reset(DB_):
         c = mycon.cursor()
         c.execute(f"DROP DATABASE IF EXISTS {DB_}")
         print("Database deleted!")
-        
     except Exception as err:
         print(f"Database delete error: {err}")
-        
     finally:
         if mycon:
             mycon.close()
@@ -42,7 +39,7 @@ def Db():
         c = mycon.cursor()
         c.execute(f"CREATE DATABASE IF NOT EXISTS {DB_}")
         c.execute(f"USE {DB_}")
-        
+
         c.execute("""
             CREATE TABLE IF NOT EXISTS player(
                 players_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -52,7 +49,7 @@ def Db():
         c.execute("""
             CREATE TABLE IF NOT EXISTS highscores(
                 score_id INT PRIMARY KEY AUTO_INCREMENT,
-                player_id INT,
+                player_id INT UNIQUE,
                 score INT NOT NULL,
                 obstacles INT NOT NULL,
                 FOREIGN KEY(player_id)
@@ -60,12 +57,23 @@ def Db():
                 ON DELETE CASCADE
             )
         """)
+        # MySQL table replacing pickle game history
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS game_history(
+                history_id INT PRIMARY KEY AUTO_INCREMENT,
+                player_id INT,
+                score INT NOT NULL,
+                obstacles INT NOT NULL,
+                played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(player_id)
+                REFERENCES player(players_id)
+                ON DELETE CASCADE
+            )
+        """)
         mycon.commit()
-        print("All databases made")
-        
+        print("All tables initialized successfully.")
     except Exception as err:
-        print("Error is:", err)
-        
+        print("Error creating tables:", err)
     finally:
         if mycon:
             mycon.close()
@@ -80,23 +88,39 @@ def register_player(username):
         c = mycon.cursor()
         c.execute("SELECT players_id FROM player WHERE username = %s", (username,))
         check = c.fetchone()
-        
+
         if check:
             player_id = check[0]
             print("Player exists")
-            
         else:
             c.execute("INSERT INTO player(username) VALUES(%s)", (username,))
             player_id = c.lastrowid
-            print("New Player")
+            print("New Player created")
             mycon.commit()
-            
+
         return player_id
-    
     except Exception as err:
-        print("Error is:", err)
+        print("Registration error:", err)
         return None
-    
+    finally:
+        if mycon:
+            mycon.close()
+
+
+def save_history(player_id, score, obs):
+    mycon = None
+    try:
+        mycon = connect()
+        if mycon is None:
+            return
+        c = mycon.cursor()
+        c.execute("""
+            INSERT INTO game_history(player_id, score, obstacles)
+            VALUES(%s, %s, %s)
+        """, (player_id, score, obs))
+        mycon.commit()
+    except Exception as err:
+        print("History save error:", err)
     finally:
         if mycon:
             mycon.close()
@@ -111,30 +135,24 @@ def save_scores(player_id, score, obs):
         c = mycon.cursor()
         c.execute("SELECT score FROM highscores WHERE player_id = %s", (player_id,))
         result = c.fetchone()
-        
+
         if result:
             score_old = result[0]
-            if score_old > score:
-                print(f"Old Score Higher: {score_old}")
-                
-            else:
+            if score > score_old:
                 c.execute("""
                     UPDATE highscores
                     SET score = %s, obstacles = %s
                     WHERE player_id = %s
                 """, (score, obs, player_id))
-                print("New Highscore!")
-                
+                print("New Highscore updated!")
         else:
             c.execute("""
                 INSERT INTO highscores(player_id, score, obstacles)
                 VALUES(%s, %s, %s)
             """, (player_id, score, obs))
         mycon.commit()
-        
     except Exception as err:
-        print("Error is:", err)
-        
+        print("Score save error:", err)
     finally:
         if mycon:
             mycon.close()
@@ -153,26 +171,56 @@ def show_stats():
     """)
     results = c.fetchall()
     mycon.close()
-    
+
     stats = tk.Toplevel(root)
     stats.title("High-Scores")
     stats.geometry("500x350")
     tk.Label(stats, text="HIGH-SCORES", font=("Arial", 20, "bold")).pack(pady=15)
-    
+
     heading = tk.Label(stats, text="Rank       Player          Score       Obstacles", font=("Arial", 12, "bold"))
     heading.pack(pady=5)
     tk.Label(stats, text="-" * 55, font=("Arial", 10)).pack()
-    
+
     if not results:
         tk.Label(stats, text="No scores recorded yet.", font=("Arial", 12)).pack(pady=15)
-        
     else:
         for i, row in enumerate(results, start=1):
             username = row[0]
             score = row[1]
             obstacles = row[2]
-            text = (f"{i:<10}" f"{username:<15}" f"{score:<12}" f"{obstacles}")
+            text = f"{i:<10}{username:<15}{score:<12}{obstacles}"
             tk.Label(stats, text=text, font=("Courier New", 11)).pack(anchor="w", padx=30, pady=2)
+
+
+def show_history():
+    mycon = connect()
+    if mycon is None:
+        return
+    c = mycon.cursor()
+    c.execute("""
+        SELECT p.username, g.score, g.obstacles, g.played_at
+        FROM game_history g
+        JOIN player p ON p.players_id = g.player_id
+        ORDER BY g.history_id DESC
+        LIMIT 20
+    """)
+    history = c.fetchall()
+    mycon.close()
+
+    history_window = tk.Toplevel(root)
+    history_window.title("Game History")
+    history_window.geometry("500x350")
+    tk.Label(history_window, text="Recent Games", font=("Arial", 18, "bold")).pack(pady=10)
+
+    if not history:
+        tk.Label(history_window, text="No Games Played Yet.", font=("Arial", 12)).pack(pady=15)
+        return
+
+    for i, row in enumerate(history, start=1):
+        username, final_score, obstacles, played_at = row
+        time_str = played_at.strftime("%H:%M:%S") if played_at else ""
+        text = f"{i:<3} {username:<10} Score: {final_score:<6} Obs: {obstacles:<4} [{time_str}]"
+        tk.Label(history_window, text=text, font=("Courier New", 10)).pack(anchor="w", padx=20, pady=2)
 
 
 def retry_game(window, player_id):
@@ -186,72 +234,22 @@ def exit_game(window):
     root.destroy()
 
 
+def back_to_menu(window):
+    window.destroy()
+    root.deiconify()
+
+
 def game_over_window(player_id, final_score, obstacles):
     window = tk.Toplevel()
     window.title("Game Over")
     window.geometry("350x250")
-    
+
     tk.Label(window, text="Game Over", font=("Arial", 20)).pack(pady=15)
     tk.Label(window, text=f"Final score: {final_score}", font=("Arial", 14)).pack()
     tk.Label(window, text=f"Obstacles cleared: {obstacles}", font=("Arial", 14)).pack(pady=5)
     tk.Button(window, text="Retry", command=lambda: retry_game(window, player_id)).pack(pady=10)
     tk.Button(window, text="Main Menu", command=lambda: back_to_menu(window)).pack(pady=5)
     tk.Button(window, text="Exit", command=lambda: exit_game(window)).pack()
-
-
-game_history_file = "game_history.pkl"
-try:
-    with open(game_history_file, "rb") as f:
-        game_history = pickle.load(f)
-except:
-    game_history = []
-
-
-def show_history():
-    try:
-        with open(game_history_file, "rb") as file:
-            history = pickle.load(file)
-            
-    except Exception as err:
-        print("History Error:", err)
-        history = []
-    history_window = tk.Toplevel(root)
-    history_window.title("Game History")
-    history_window.geometry("450x300")
-    tk.Label(history_window, text="Game History", font=("Arial", 20, "bold")).pack(pady=15)
-    
-    if not history:
-        tk.Label(history_window, text="No Games Played Yet.", font=("Arial", 14)).pack(pady=10)
-        return
-    
-    for i, game_data in enumerate(reversed(history), start=1):
-        final_score = game_data[0]
-        obstacles = game_data[1]
-        text = (f"Game {i}: " f"score = {final_score}   " f"obstacles = {obstacles}")
-        tk.Label(history_window, text=text, font=("Arial", 12)).pack(pady=3)
-
-
-def back_to_menu(window):
-    window.destroy()
-    root.deiconify()
-
-
-def load_stack():
-    try:
-        with open(game_history_file, "rb") as file:
-            return pickle.load(file)
-        
-    except:
-        return []
-
-
-def stack_file():
-    try:
-        with open(game_history_file, "wb") as f:
-            pickle.dump(game_history, f)
-            
-    except:
-        print("Error saving history")
 
 
 def game(player_id):
@@ -262,27 +260,25 @@ def game(player_id):
     pygame.display.set_caption("Dino Game")
     clock = pygame.time.Clock()
     run = True
-    
+
     score = 0.01
     obstacle = 0
-    
+
     dino_h = 50
     dino_w = 30
     dino_x = 100
     dino_y = 300
-    
+
     dino_rect = pygame.Rect(dino_x, dino_y, dino_w, dino_h)
-    
+
     cac_speed = 6
     max_speed = 30
-    
-    speed_increase_amount = 1.5
     speed_increase_every = 5
-    
+    speed_increase_amount = 2
+
     ground_y = 350
     cactus_list = []
 
-    speed_increase_amount = 2
     spawn_timer = 0
     next_spawn_time = random.randint(60, 110)
 
@@ -327,7 +323,6 @@ def game(player_id):
         screen.blit(obstacles_text, (5, 40))
 
         speed_text = font.render("Speed: " + str(cac_speed), True, (0, 0, 0))
-
         screen.blit(speed_text, (5, 75))
 
         pygame.draw.line(screen, (0, 0, 0), (0, ground_y), (width, ground_y), 3)
@@ -365,16 +360,16 @@ def game(player_id):
 
                 if obstacle % speed_increase_every == 0 and cac_speed < max_speed:
                     cac_speed += speed_increase_amount
-                    print("Speed increased!", "New speed:", cac_speed)
+                    print("Speed increased! New speed:", cac_speed)
 
             if dino_rect.colliderect(c_rect):
                 print("Game Over")
                 final_score = int(score)
-                game_history.append((final_score, obstacle))
 
-                with open(game_history_file, "wb") as file:
-                    pickle.dump(game_history, file)
+                # Persist directly into MySQL database
+                save_history(player_id, final_score, obstacle)
                 save_scores(player_id, final_score, obstacle)
+
                 run = False
                 break
 
@@ -383,6 +378,7 @@ def game(player_id):
                     cactus_list.remove(c)
 
         clock.tick(60)
+
     pygame.quit()
     return final_score, obstacle
 
@@ -394,9 +390,9 @@ root.title("Dino Game")
 root.geometry("400x250")
 
 username_label = tk.Label(root, text="Enter Username:")
-username_label.pack()
+username_label.pack(pady=5)
 username_entry = tk.Entry(root)
-username_entry.pack()
+username_entry.pack(pady=5)
 
 
 def start_game():
@@ -406,27 +402,24 @@ def start_game():
         print("Please enter a username.")
         return
 
-    print("Username:", username)
     player_id = register_player(username)
-
     if player_id is None:
         return
 
-    print("Player ID:", player_id)
     root.withdraw()
     final_score, obstacle = game(player_id)
     game_over_window(player_id, final_score, obstacle)
 
 
-tk.Button(root, text="Start Game", command=start_game).pack(pady=3)
-tk.Button(root, text="Game History", command=show_history).pack(pady=3)
-tk.Button(root, text="Stats", command=show_stats).pack()
+tk.Button(root, text="Start Game", command=start_game, width=15).pack(pady=5)
+tk.Button(root, text="Game History", command=show_history, width=15).pack(pady=5)
+tk.Button(root, text="Stats", command=show_stats, width=15).pack(pady=5)
 
 root.mainloop()
-mycon = connect()
 
+mycon = connect()
 if mycon:
     c = mycon.cursor()
     c.execute("SELECT * FROM player")
-    print(c.fetchall())
+    print("Registered players:", c.fetchall())
     mycon.close()
