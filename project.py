@@ -219,7 +219,7 @@ def show_history():
 
     for i, row in enumerate(history, start=1):
         username, final_score, obstacles, played_at = row
-        time_str = played_at.strftime("%H:%M:%S") if played_at else ""
+        time_str = played_at.strftime("%Y-%m-%d %H:%M:%S") if played_at else ""
         text = f"{i:<3} {username:<10} Score: {final_score:<6} Obs: {obstacles:<4} [{time_str}]"
         tk.Label(history_window, text=text, font=("Courier New", 10)).pack(anchor="w", padx=20, pady=2)
 
@@ -262,7 +262,7 @@ def game(player_id):
     clock = pygame.time.Clock()
     run = True
 
-    score = 0.01
+    score = 0
     obstacle = 0
 
     dino_h = 50
@@ -311,7 +311,7 @@ def game(player_id):
             dino_y = ground_y - dino_h
             velo = 0
 
-        score = score + 0.1
+        score = obstacle * 5
         dino_rect.x = dino_x
         dino_rect.y = dino_y
 
@@ -319,9 +319,6 @@ def game(player_id):
 
         score_text = font.render("Score: " + str(int(score)), True, (0, 0, 0))
         screen.blit(score_text, (5, 5))
-
-        obstacles_text = font.render("Obstacles cleared: " + str(obstacle), True, (0, 0, 0))
-        screen.blit(obstacles_text, (5, 40))
 
         speed_text = font.render("Speed: " + str(cac_speed), True, (0, 0, 0))
         screen.blit(speed_text, (5, 75))
@@ -365,7 +362,7 @@ def game(player_id):
 
             if dino_rect.colliderect(c_rect):
                 print("Game Over")
-                final_score = int(score)
+                final_score = obstacle * 5
 
                 
                 save_history(player_id, final_score, obstacle)
@@ -384,7 +381,7 @@ def game(player_id):
     return final_score, obstacle
 
 
-reset(DB_)
+#reset(DB_)
 Db()
 root = tk.Tk()
 root.title("Dino Game")
