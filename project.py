@@ -46,6 +46,7 @@ def Db():
                 username VARCHAR(20) UNIQUE NOT NULL
             )
         """)
+        
         c.execute("""
             CREATE TABLE IF NOT EXISTS highscores(
                 score_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -57,7 +58,7 @@ def Db():
                 ON DELETE CASCADE
             )
         """)
-        # MySQL table replacing pickle game history
+        
         c.execute("""
             CREATE TABLE IF NOT EXISTS game_history(
                 history_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -284,13 +285,13 @@ def game(player_id):
 
     velo = 0
     gravity = 1
-    jump = -14
+    jump = -15
     font = pygame.font.Font(None, 36)
     final_score = 0
 
     def get_next_spawn_interval(current_speed):
         min_frame = max(28, int(450 / current_speed))
-        max_frame = max(45, int(750 / current_speed))
+        max_frame = max(45,int(750/current_speed))
         return random.randint(min_frame, max_frame)
 
     while run:
@@ -366,7 +367,7 @@ def game(player_id):
                 print("Game Over")
                 final_score = int(score)
 
-                # Persist directly into MySQL database
+                
                 save_history(player_id, final_score, obstacle)
                 save_scores(player_id, final_score, obstacle)
 
