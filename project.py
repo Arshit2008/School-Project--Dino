@@ -9,7 +9,8 @@ DB_password = "computer"
 DB_ = input("Database Name: ")
 
 
-def connect():
+def connect():              #used for making connection variable
+    """Connect to the selected MySQL database and return the connection."""
     try:
         m = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password, database=DB_)
         return m
@@ -19,6 +20,7 @@ def connect():
 
 
 def reset(DB_):
+    """Delete the selected database and close the MySQL connection."""
     mycon = None
     try:
         mycon = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password)
@@ -33,6 +35,7 @@ def reset(DB_):
 
 
 def Db():
+    #####   Create the database and initialize the player, score, and history tables    #####
     mycon = None
     try:
         mycon = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password)
@@ -81,6 +84,7 @@ def Db():
 
 
 def register_player(username):
+    ##### Find or create a player by username and return the player's ID.  #####
     mycon = None
     try:
         mycon = connect()
@@ -109,6 +113,7 @@ def register_player(username):
 
 
 def save_history(player_id, score, obs):
+    """Store one completed game in the player's game history."""
     mycon = None
     try:
         mycon = connect()
@@ -128,6 +133,7 @@ def save_history(player_id, score, obs):
 
 
 def save_scores(player_id, score, obs):
+    """Save a player's score when it is their first or highest score."""
     mycon = None
     try:
         mycon = connect()
@@ -160,6 +166,7 @@ def save_scores(player_id, score, obs):
 
 
 def show_stats():
+    """Display the saved high scores in a Tkinter window."""
     mycon = connect()
     if mycon is None:
         return
@@ -194,6 +201,7 @@ def show_stats():
 
 
 def show_history():
+    """Display the 20 most recent games in a Tkinter window."""
     mycon = connect()
     if mycon is None:
         return
@@ -225,22 +233,26 @@ def show_history():
 
 
 def retry_game(window, player_id):
+    """Close the game-over window and start another game for the player."""
     window.destroy()
     final_score, obstacles = game(player_id)
     game_over_window(player_id, final_score, obstacles)
 
 
 def exit_game(window):
+    """Close the current window and exit the application."""
     window.destroy()
     root.destroy()
 
 
 def back_to_menu(window):
+    """Close the current window and show the main menu again."""
     window.destroy()
     root.deiconify()
 
 
 def game_over_window(player_id, final_score, obstacles):
+    """Create the game-over window with score details and action buttons."""
     window = tk.Toplevel()
     window.title("Game Over")
     window.geometry("350x250")
@@ -254,6 +266,7 @@ def game_over_window(player_id, final_score, obstacles):
 
 
 def game(player_id):
+    """Run the Dino game and return the final score and cleared obstacles."""
     pygame.init()
     width = 800
     height = 400
@@ -290,6 +303,7 @@ def game(player_id):
     final_score = 0
 
     def get_next_spawn_interval(current_speed):
+        """Choose a random cactus spawn interval based on the current speed."""
         min_frame = max(28, int(450 / current_speed))
         max_frame = max(45,int(750/current_speed))
         return random.randint(min_frame, max_frame)
@@ -394,6 +408,7 @@ username_entry.pack(pady=5)
 
 
 def start_game():
+    """Validate the username, register the player, and start the game."""
     username = username_entry.get().strip()
 
     if username == "":
