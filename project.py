@@ -1,31 +1,36 @@
+import random
+import tkinter as tk
+from tkinter import messagebox
 import mysql.connector
 import pygame
-import tkinter as tk
-import random
 
 DB_host = "localhost"
 DB_user = "root"
 DB_password = "computer"
-DB_ = input("Database Name: ")
+DB_ = input("Database Name: ").strip()
 
 
-def connect():              #used for making connection variable
+def connect():
     """Connect to the selected MySQL database and return the connection."""
     try:
-        m = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password, database=DB_)
+        m = mysql.connector.connect(
+            host=DB_host, user=DB_user, password=DB_password, database=DB_
+        )
         return m
     except Exception as err:
         print("DATABASE CONNECTION ERROR:", err)
         return None
 
 
-def reset(DB_):
+def reset(db_name):
     """Delete the selected database and close the MySQL connection."""
     mycon = None
     try:
-        mycon = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password)
+        mycon = mysql.connector.connect(
+            host=DB_host, user=DB_user, password=DB_password
+        )
         c = mycon.cursor()
-        c.execute(f"DROP DATABASE IF EXISTS {DB_}")
+        c.execute(f"DROP DATABASE IF EXISTS `{db_name}`")
         print("Database deleted!")
     except Exception as err:
         print(f"Database delete error: {err}")
@@ -35,13 +40,15 @@ def reset(DB_):
 
 
 def Db():
-    #####   Create the database and initialize the player, score, and history tables    #####
+    """Create the database and initialize the player, score, and history tables."""
     mycon = None
     try:
-        mycon = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password)
+        mycon = mysql.connector.connect(
+            host=DB_host, user=DB_user, password=DB_password
+        )
         c = mycon.cursor()
-        c.execute(f"CREATE DATABASE IF NOT EXISTS {DB_}")
-        c.execute(f"USE {DB_}")
+        c.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_}`")
+        c.execute(f"USE `{DB_}`")
 
         c.execute("""
             CREATE TABLE IF NOT EXISTS player(
@@ -49,7 +56,7 @@ def Db():
                 username VARCHAR(20) UNIQUE NOT NULL
             )
         """)
-        
+
         c.execute("""
             CREATE TABLE IF NOT EXISTS highscores(
                 score_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -61,7 +68,7 @@ def Db():
                 ON DELETE CASCADE
             )
         """)
-        
+
         c.execute("""
             CREATE TABLE IF NOT EXISTS game_history(
                 history_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -84,7 +91,7 @@ def Db():
 
 
 def register_player(username):
-    ##### Find or create a player by username and return the player's ID.  #####
+    """Find or create a player by username and return the player's ID."""
     mycon = None
     try:
         mycon = connect()
@@ -185,7 +192,11 @@ def show_stats():
     stats.geometry("500x350")
     tk.Label(stats, text="HIGH-SCORES", font=("Arial", 20, "bold")).pack(pady=15)
 
-    heading = tk.Label(stats, text="Rank       Player          Score       Obstacles", font=("Arial", 12, "bold"))
+    heading = tk.Label(
+        stats,
+        text="Rank      Player          Score       Obstacles",
+        font=("Arial", 12, "bold"),
+    )
     heading.pack(pady=5)
     tk.Label(stats, text="-" * 55, font=("Arial", 10)).pack()
 
@@ -193,11 +204,11 @@ def show_stats():
         tk.Label(stats, text="No scores recorded yet.", font=("Arial", 12)).pack(pady=15)
     else:
         for i, row in enumerate(results, start=1):
-            username = row[0]
-            score = row[1]
-            obstacles = row[2]
+            username, score, obstacles = row[0], row[1], row[2]
             text = f"{i:<10}{username:<15}{score:<12}{obstacles}"
-            tk.Label(stats, text=text, font=("Courier New", 11)).pack(anchor="w", padx=30, pady=2)
+            tk.Label(stats, text=text, font=("Courier New", 11)).pack(
+                anchor="w", padx=30, pady=2
+            )
 
 
 def show_history():
@@ -218,7 +229,7 @@ def show_history():
 
     history_window = tk.Toplevel(root)
     history_window.title("Game History")
-    history_window.geometry("500x350")
+    history_window.geometry("520x350")
     tk.Label(history_window, text="Recent Games", font=("Arial", 18, "bold")).pack(pady=10)
 
     if not history:
@@ -229,7 +240,9 @@ def show_history():
         username, final_score, obstacles, played_at = row
         time_str = played_at.strftime("%Y-%m-%d %H:%M:%S") if played_at else ""
         text = f"{i:<3} {username:<10} Score: {final_score:<6} Obs: {obstacles:<4} [{time_str}]"
-        tk.Label(history_window, text=text, font=("Courier New", 10)).pack(anchor="w", padx=20, pady=2)
+        tk.Label(history_window, text=text, font=("Courier New", 10)).pack(
+            anchor="w", padx=20, pady=2
+        )
 
 
 def retry_game(window, player_id):
@@ -253,36 +266,30 @@ def back_to_menu(window):
 
 def game_over_window(player_id, final_score, obstacles):
     """Create the game-over window with score details and action buttons."""
-    window = tk.Toplevel()
+    window = tk.Toplevel(root)
     window.title("Game Over")
     window.geometry("350x250")
 
-    tk.Label(window, text="Game Over", font=("Arial", 20)).pack(pady=15)
-    tk.Label(window, text=f"Final score: {final_score}", font=("Arial", 14)).pack()
-    tk.Label(window, text=f"Obstacles cleared: {obstacles}", font=("Arial", 14)).pack(pady=5)
-    tk.Button(window, text="Retry", command=lambda: retry_game(window, player_id)).pack(pady=10)
-    tk.Button(window, text="Main Menu", command=lambda: back_to_menu(window)).pack(pady=5)
-    tk.Button(window, text="Exit", command=lambda: exit_game(window)).pack()
+    tk.Label(window, text="Game Over", font=("Arial", 20, "bold")).pack(pady=15)
+    tk.Label(window, text=f"Final score: {final_score}", font=("Arial", 13)).pack()
+    tk.Label(window, text=f"Obstacles cleared: {obstacles}", font=("Arial", 13)).pack(pady=5)
+    tk.Button(window, text="Retry", command=lambda: retry_game(window, player_id), width=12).pack(pady=5)
+    tk.Button(window, text="Main Menu", command=lambda: back_to_menu(window), width=12).pack(pady=5)
+    tk.Button(window, text="Exit", command=lambda: exit_game(window), width=12).pack(pady=5)
 
 
 def game(player_id):
     """Run the Dino game and return the final score and cleared obstacles."""
     pygame.init()
-    width = 800
-    height = 400
+    width, height = 800, 400
     screen = pygame.display.set_mode((width, height))
     pygame.display.set_caption("Dino Game")
     clock = pygame.time.Clock()
     run = True
 
-    score = 0
     obstacle = 0
-
-    dino_h = 50
-    dino_w = 30
-    dino_x = 100
-    dino_y = 300
-
+    dino_h, dino_w = 50, 30
+    dino_x, dino_y = 100, 300
     dino_rect = pygame.Rect(dino_x, dino_y, dino_w, dino_h)
 
     cac_speed = 6
@@ -303,9 +310,8 @@ def game(player_id):
     final_score = 0
 
     def get_next_spawn_interval(current_speed):
-        """Choose a random cactus spawn interval based on the current speed."""
         min_frame = max(28, int(450 / current_speed))
-        max_frame = max(45,int(750/current_speed))
+        max_frame = max(45, int(750 / current_speed))
         return random.randint(min_frame, max_frame)
 
     while run:
@@ -313,29 +319,25 @@ def game(player_id):
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if dino_y >= ground_y - dino_h:
-                        velo = jump
+                if event.key == pygame.K_SPACE and dino_y >= ground_y - dino_h:
+                    velo = jump
                 if event.key == pygame.K_ESCAPE:
                     run = False
 
-        velo = velo + gravity
-        dino_y = dino_y + velo
+        velo += gravity
+        dino_y += velo
         if dino_y >= ground_y - dino_h:
             dino_y = ground_y - dino_h
             velo = 0
 
         score = obstacle * 5
-        dino_rect.x = dino_x
         dino_rect.y = dino_y
 
         screen.fill((255, 255, 255))
-
-        score_text = font.render("Score: " + str(int(score)), True, (0, 0, 0))
+        score_text = font.render(f"Score: {int(score)}", True, (0, 0, 0))
         screen.blit(score_text, (5, 5))
-
-        speed_text = font.render("Speed: " + str(cac_speed), True, (0, 0, 0))
-        screen.blit(speed_text, (5, 75))
+        speed_text = font.render(f"Speed: {cac_speed}", True, (0, 0, 0))
+        screen.blit(speed_text, (5, 40))
 
         pygame.draw.line(screen, (0, 0, 0), (0, ground_y), (width, ground_y), 3)
         pygame.draw.rect(screen, (0, 0, 0), (dino_x, dino_y, dino_w, dino_h))
@@ -348,46 +350,37 @@ def game(player_id):
         if spawn_timer >= next_spawn_time:
             c_type = random.randint(1, 3)
             if c_type == 1:
-                cac_width = 15
-                cac_height = 25
+                cac_width, cac_height = 15, 25
             elif c_type == 2:
-                cac_width = 25
-                cac_height = 60
+                cac_width, cac_height = 25, 60
             else:
-                cac_width = 45
-                cac_height = 40
+                cac_width, cac_height = 45, 40
 
             new_cactus = pygame.Rect(width, ground_y - cac_height, cac_width, cac_height)
             cactus_list.append([new_cactus, False])
             spawn_timer = 0
             next_spawn_time = get_next_spawn_interval(cac_speed)
 
+        # Move and check collisions
         for c in cactus_list:
             c_rect = c[0]
             c_rect.x -= cac_speed
 
-            if c_rect.right < dino_x and c[1] is False:
+            if c_rect.right < dino_x and not c[1]:
                 obstacle += 1
                 c[1] = True
-
                 if obstacle % speed_increase_every == 0 and cac_speed < max_speed:
                     cac_speed += speed_increase_amount
-                    print("Speed increased! New speed:", cac_speed)
 
             if dino_rect.colliderect(c_rect):
-                print("Game Over")
                 final_score = obstacle * 5
-
-                
                 save_history(player_id, final_score, obstacle)
                 save_scores(player_id, final_score, obstacle)
-
                 run = False
                 break
 
-            if c_rect.right < 0:
-                if c in cactus_list:
-                    cactus_list.remove(c)
+        # Safely prune offscreen cacti
+        cactus_list = [c for c in cactus_list if c[0].right >= 0]
 
         clock.tick(60)
 
@@ -395,28 +388,27 @@ def game(player_id):
     return final_score, obstacle
 
 
-#reset(DB_)
 Db()
 root = tk.Tk()
 root.title("Dino Game")
 root.geometry("400x250")
 
-username_label = tk.Label(root, text="Enter Username:")
-username_label.pack(pady=5)
-username_entry = tk.Entry(root)
+username_label = tk.Label(root, text="Enter Username:", font=("Arial", 11))
+username_label.pack(pady=8)
+username_entry = tk.Entry(root, font=("Arial", 11))
 username_entry.pack(pady=5)
 
 
 def start_game():
-    """Validate the username, register the player, and start the game."""
     username = username_entry.get().strip()
 
-    if username == "":
-        print("Please enter a username.")
+    if not username:
+        messagebox.showwarning("Warning", "Please enter a username.")
         return
 
     player_id = register_player(username)
     if player_id is None:
+        messagebox.showerror("Error", "Could not connect to database.")
         return
 
     root.withdraw()

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Class 12 CS Project Submission - Dino Game & MySQL (Colored)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 12mm;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: #525659;
+    font-family: 'Courier Prime', 'IBM Plex Mono', 'Courier New', monospace;
+    color: #111111;
+    font-size: 9.5pt;
+    line-height: 1.35;
+  }
+
+  /* Force exact single-page canvas */
+  .a4-page {
+    width: 210mm;
+    min-height: 297mm;
+    height: 297mm;
+    margin: 20px auto;
+    padding: 12mm 15mm;
+    background: #ffffff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    page-break-after: always;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+
+  /* Document Running Header */
+  .doc-header {
+    border-bottom: 2px solid #222;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .doc-header h1 {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .doc-header .meta {
+    font-size: 8pt;
+    color: #444;
+  }
+
+  /* Section Title Strip */
+  .section-banner {
+    border: 1px solid #222;
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    background: #fbfbfb;
+  }
+
+  .section-banner h2 {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .section-banner p {
+    font-size: 7.5pt;
+    color: #444;
+    margin-top: 1px;
+  }
+
+  /* Monospace Code Display */
+  pre {
+    font-family: 'Courier Prime', 'IBM Plex Mono', monospace;
+    font-size: 7.3pt;
+    line-height: 1.25;
+    color: #111;
+    white-space: pre-wrap;
+    word-break: break-all;
+    flex-grow: 1;
+  }
+
+  /* Color Accents matching Python IDLE */
+  .kwd { color: #ff7700; font-weight: 700; }
+  .str { color: #00aa00; }
+  .num { color: #cc6600; }
+  .cmt { color: #dd0000; font-style: italic; }
+  .sql { color: #990099; font-weight: 700; }
+
+  /* 4-Box Grid layout for Explanation Pages */
+  .grid-4box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+    flex-grow: 1;
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+
+  .box {
+    border: 1.5px solid #222;
+    padding: 12px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .box h3 {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 1px dashed #666;
+    padding-bottom: 3px;
+    margin-bottom: 4px;
+  }
+
+  .box .sub-title {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+  }
+
+  .box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .box li {
+    font-size: 7.8pt;
+    margin-bottom: 6px;
+    line-height: 1.35;
+    padding-left: 12px;
+    position: relative;
+  }
+
+  .box li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+  }
+
+  .box code {
+    font-family: inherit;
+    font-weight: 700;
+    background: #f0f0f0;
+    padding: 0 3px;
+  }
+
+  /* Running Bottom Footer */
+  .doc-footer {
+    margin-top: auto;
+    padding-top: 4px;
+    border-top: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.8pt;
+    color: #555;
+  }
+
+  @media print {
+    body {
+      background: none;
+      padding: 0;
+    }
+    .a4-page {
+      margin: 0;
+      padding: 10mm 14mm;
+      box-shadow: none;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      page-break-after: always;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: SOURCE CODE PART 1 -->
+<div class="a4-page">
+  <div class="doc-header">
+    <h1>Class 12 CS Project Submission - Dino Game &amp; MySQL (Colored)</h1>
+    <div class="meta">Page 1 of 4</div>
+  </div>
+
+  <div class="section-banner">
+    <h2>MAIN SOURCE CODE (PART 1)</h2>
+    <p>Project: Dino Runner with MySQL Database Integration | Backend &amp; Schema Initialization</p>
+  </div>
+
+  <pre><code><span class="kwd">import</span> random
+<span class="kwd">import</span> tkinter <span class="kwd">as</span> tk
+<span class="kwd">from</span> tkinter <span class="kwd">import</span> messagebox
+<span class="kwd">import</span> mysql.connector
+<span class="kwd">import</span> pygame
+
+<span class="cmt"># DATABASE CONFIGURATION</span>
+DB_host = <span class="str">"localhost"</span>
+DB_user = <span class="str">"root"</span>
+DB_password = <span class="str">"computer"</span>
+DB = input(<span class="str">"Database Name: "</span>).strip()
+
+<span class="kwd">def</span> connect():
+    <span class="str">"""Connect to selected MySQL database and return connection object."""</span>
+    <span class="kwd">try</span>:
+        <span class="kwd">return</span> mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password, database=DB)
+    <span class="kwd">except</span> Exception <span class="kwd">as</span> err:
+        print(<span class="str">"DATABASE CONNECTION ERROR:"</span>, err)
+        <span class="kwd">return None</span>
+
+<span class="kwd">def</span> reset(db_name):
+    <span class="str">"""Delete selected database."""</span>
+    mycon = <span class="kwd">None</span>
+    <span class="kwd">try</span>:
+        mycon = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password)
+        c = mycon.cursor()
+        c.execute(<span class="sql">f"DROP DATABASE IF EXISTS {db_name}"</span>)
+    <span class="kwd">finally</span>:
+        <span class="kwd">if</span> mycon: mycon.close()
+
+<span class="kwd">def</span> Db():
+    <span class="str">"""Initialize database and player, highscores, and game_history tables."""</span>
+    mycon = <span class="kwd">None</span>
+    <span class="kwd">try</span>:
+        mycon = mysql.connector.connect(host=DB_host, user=DB_user, password=DB_password)
+        c = mycon.cursor()
+        c.execute(<span class="sql">f"CREATE DATABASE IF NOT EXISTS {DB}"</span>)
+        c.execute(<span class="sql">f"USE {DB}"</span>)
+        c.execute(<span class="sql">"""CREATE TABLE IF NOT EXISTS player(
+            players_id INT PRIMARY KEY AUTO_INCREMENT,
+            username VARCHAR(20) UNIQUE NOT NULL
+        )"""</span>)
+        c.execute(<span class="sql">"""CREATE TABLE IF NOT EXISTS highscores(
+            score_id INT PRIMARY KEY AUTO_INCREMENT,
+            player_id INT UNIQUE,
+            score INT NOT NULL,
+            obstacles INT NOT NULL,
+            FOREIGN KEY(player_id) REFERENCES player(players_id) ON DELETE CASCADE
+        )"""</span>)
+        c.execute(<span class="sql">"""CREATE TABLE IF NOT EXISTS game_history(
+            history_id INT PRIMARY KEY AUTO_INCREMENT,
+            player_id INT,
+            score INT NOT NULL,
+            obstacles INT NOT NULL,
+            played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(player_id) REFERENCES player(players_id) ON DELETE CASCADE
+        )"""</span>)
+        mycon.commit()
+    <span class="kwd">finally</span>:
+        <span class="kwd">if</span> mycon: mycon.close()</code></pre>
+
+  <div class="doc-footer">
+    <span>Dino Game &amp; MySQL Integration</span>
+    <span>Page 1 of 4</span>
+  </div>
+</div>
+
+<!-- PAGE 2: SOURCE CODE PART 2 -->
+<div class="a4-page">
+  <div class="doc-header">
+    <h1>Class 12 CS Project Submission - Dino Game &amp; MySQL (Colored)</h1>
+    <div class="meta">Page 2 of 4</div>
+  </div>
+
+  <div class="section-banner">
+    <h2>MAIN SOURCE CODE (PART 2)</h2>
+    <p>Data Layer Operations, GUI Dashboard (Tkinter) &amp; Pygame Loop</p>
+  </div>
+
+  <pre><code><span class="kwd">def</span> register_player(username):
+    <span class="str">"""Find or register a user handle and return primary key player_id."""</span>
+    mycon = connect()
+    <span class="kwd">if not</span> mycon: <span class="kwd">return None</span>
+    <span class="kwd">try</span>:
+        c = mycon.cursor()
+        c.execute(<span class="sql">"SELECT players_id FROM player WHERE username = %s"</span>, (username,))
+        check = c.fetchone()
+        <span class="kwd">if</span> check:
+            <span class="kwd">return</span> check[<span class="num">0</span>]
+        <span class="kwd">else</span>:
+            c.execute(<span class="sql">"INSERT INTO player (username) VALUES (%s)"</span>, (username,))
+            mycon.commit()
+            <span class="kwd">return</span> c.lastrowid
+    <span class="kwd">finally</span>:
+        mycon.close()
+
+<span class="kwd">def</span> save_history(player_id, score, obs):
+    <span class="str">"""Log individual match run into game_history."""</span>
+    mycon = connect()
+    <span class="kwd">if</span> mycon:
+        c = mycon.cursor()
+        c.execute(<span class="sql">"INSERT INTO game_history(player_id, score, obstacles) VALUES(%s, %s, %s)"</span>, (player_id, score, obs))
+        mycon.commit()
+        mycon.close()
+
+<span class="kwd">def</span> save_scores(player_id, score, obs):
+    <span class="str">"""Update highscore if new run surpasses previous personal best."""</span>
+    mycon = connect()
+    <span class="kwd">if</span> mycon:
+        c = mycon.cursor()
+        c.execute(<span class="sql">"SELECT score FROM highscores WHERE player_id = %s"</span>, (player_id,))
+        res = c.fetchone()
+        <span class="kwd">if</span> res:
+            <span class="kwd">if</span> score > res[<span class="num">0</span>]:
+                c.execute(<span class="sql">"UPDATE highscores SET score = %s, obstacles = %s WHERE player_id = %s"</span>, (score, obs, player_id))
+        <span class="kwd">else</span>:
+            c.execute(<span class="sql">"INSERT INTO highscores (player_id, score, obstacles) VALUES (%s, %s, %s)"</span>, (player_id, score, obs))
+        mycon.commit()
+        mycon.close()
+
+<span class="cmt">#--- TKINTER GUI & STATS VIEWER ---</span>
+<span class="kwd">def</span> show_stats():
+    mycon = connect()
+    <span class="kwd">if not</span> mycon: <span class="kwd">return</span>
+    c = mycon.cursor()
+    c.execute(<span class="sql">"SELECT username, score, obstacles FROM highscores h JOIN player p ON p.players_id = h.player_id ORDER BY score DESC"</span>)
+    results = c.fetchall()
+    mycon.close()
+    stats = tk.Toplevel(root)
+    stats.title(<span class="str">"High-Scores"</span>)
+    stats.geometry(<span class="str">"480x320"</span>)
+    tk.Label(stats, text=<span class="str">"HIGH-SCORES"</span>, font=(<span class="str">"Arial"</span>, <span class="num">16</span>, <span class="str">"bold"</span>)).pack(pady=<span class="num">10</span>)
+    <span class="kwd">for</span> i, row <span class="kwd">in</span> enumerate(results, start=<span class="num">1</span>):
+        tk.Label(stats, text=<span class="str">f"{i:&lt;6} {row[0]:&lt;15} Score: {row[1]:&lt;6} Obs: {row[2]}"</span>, font=(<span class="str">"Courier New"</span>, <span class="num">10</span>)).pack(anchor=<span class="str">"w"</span>, padx=<span class="num">25</span>)
+
+<span class="kwd">def</span> show_history():
+    mycon = connect()
+    <span class="kwd">if not</span> mycon: <span class="kwd">return</span>
+    c = mycon.cursor()
+    c.execute(<span class="sql">"SELECT p.username, g.score, g.obstacles, g.played_at FROM game_history g JOIN player p ON p.players_id = g.player_id ORDER BY g.history_id DESC LIMIT 20"</span>)
+    history = c.fetchall()
+    mycon.close()
+    win = tk.Toplevel(root)
+    win.title(<span class="str">"Game History"</span>)
+    win.geometry(<span class="str">"500x320"</span>)
+    tk.Label(win, text=<span class="str">"Recent Games"</span>, font=(<span class="str">"Arial"</span>, <span class="num">16</span>, <span class="str">"bold"</span>)).pack(pady=<span class="num">8</span>)
+    <span class="kwd">for</span> i, row <span class="kwd">in</span> enumerate(history, start=<span class="num">1</span>):
+        t_str = row[<span class="num">3</span>].strftime(<span class="str">"%m-%d %H:%M"</span>) <span class="kwd">if</span> row[<span class="num">3</span>] <span class="kwd">else</span> <span class="str">""</span>
+        tk.Label(win, text=<span class="str">f"{i:&lt;3} {row[0]:&lt;10} Score: {row[1]:&lt;5} Obs: {row[2]:&lt;3} [{t_str}]"</span>, font=(<span class="str">"Courier New"</span>, <span class="num">9</span>)).pack(anchor=<span class="str">"w"</span>, padx=<span class="num">15</span>)
+
+<span class="kwd">def</span> game_over_window(player_id, final_score, obstacles):
+    win = tk.Toplevel(root)
+    win.title(<span class="str">"Game Over"</span>)
+    win.geometry(<span class="str">"320x220"</span>)
+    tk.Label(win, text=<span class="str">"GAME OVER"</span>, font=(<span class="str">"Arial"</span>, <span class="num">16</span>, <span class="str">"bold"</span>)).pack(pady=<span class="num">10</span>)
+    tk.Label(win, text=<span class="str">f"Final Score: {final_score} | Cleared: {obstacles}"</span>, font=(<span class="str">"Arial"</span>, <span class="num">11</span>)).pack(pady=<span class="num">5</span>)
+    tk.Button(win, text=<span class="str">"Retry"</span>, width=<span class="num">12</span>, command=<span class="kwd">lambda</span>: [win.destroy(), game_flow(player_id)]).pack(pady=<span class="num">4</span>)
+    tk.Button(win, text=<span class="str">"Menu"</span>, width=<span class="num">12</span>, command=<span class="kwd">lambda</span>: [win.destroy(), root.deiconify()]).pack(pady=<span class="num">4</span>)
+    tk.Button(win, text=<span class="str">"Exit"</span>, width=<span class="num">12</span>, command=<span class="kwd">lambda</span>: [win.destroy(), root.destroy()]).pack(pady=<span class="num">4</span>)
+
+<span class="kwd">def</span> game_flow(player_id):
+    score, obs = game(player_id)
+    game_over_window(player_id, score, obs)
+
+<span class="cmt"># PYGAME ENGINE</span>
+<span class="kwd">def</span> game(player_id):
+    pygame.init()
+    width, height = <span class="num">800</span>, <span class="num">400</span>
+    screen = pygame.display.set_mode((width, height))
+    clock = pygame.time.Clock()
+    run = <span class="kwd">True</span>
+    obs, dino_h, dino_w, dino_x, dino_y = <span class="num">0</span>, <span class="num">50</span>, <span class="num">30</span>, <span class="num">100</span>, <span class="num">300</span>
+    dino_rect = pygame.Rect(dino_x, dino_y, dino_w, dino_h)
+    cac_speed, ground_y, cactus_list = <span class="num">6</span>, <span class="num">350</span>, []
+    spawn_timer, next_spawn = <span class="num">0</span>, <span class="num">80</span>
+    velo, gravity, jump = <span class="num">0</span>, <span class="num">1</span>, <span class="num">-15</span>
+    font = pygame.font.Font(<span class="kwd">None</span>, <span class="num">36</span>)
+
+    <span class="kwd">while</span> run:
+        <span class="kwd">for</span> event <span class="kwd">in</span> pygame.event.get():
+            <span class="kwd">if</span> event.type == pygame.QUIT <span class="kwd">or</span> (event.type == pygame.KEYDOWN <span class="kwd">and</span> event.key == pygame.K_ESCAPE):
+                run = <span class="kwd">False</span>
+            <span class="kwd">if</span> event.type == pygame.KEYDOWN <span class="kwd">and</span> event.key == pygame.K_SPACE <span class="kwd">and</span> dino_y >= ground_y - dino_h:
+                velo = jump
+
+        velo += gravity
+        dino_y += velo
+        <span class="kwd">if</span> dino_y >= ground_y - dino_h:
+            dino_y, velo = ground_y - dino_h, <span class="num">0</span>
+        dino_rect.y = dino_y
+
+        screen.fill((<span class="num">255</span>, <span class="num">255</span>, <span class="num">255</span>))
+        screen.blit(font.render(<span class="str">f"Score: {obs * 5} Speed: {cac_speed}"</span>, <span class="kwd">True</span>, (<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>)), (<span class="num">10</span>, <span class="num">10</span>))
+        pygame.draw.line(screen, (<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>), (<span class="num">0</span>, ground_y), (width, ground_y), <span class="num">3</span>)
+        pygame.draw.rect(screen, (<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>), dino_rect)
+
+        spawn_timer += <span class="num">1</span>
+        <span class="kwd">if</span> spawn_timer >= next_spawn:
+            ch, cw = random.choice([(<span class="num">25</span>, <span class="num">15</span>), (<span class="num">60</span>, <span class="num">25</span>), (<span class="num">40</span>, <span class="num">45</span>)])
+            cactus_list.append([pygame.Rect(width, ground_y - ch, cw, ch), <span class="kwd">False</span>])
+            spawn_timer, next_spawn = <span class="num">0</span>, random.randint(max(<span class="num">28</span>, int(<span class="num">450</span> / cac_speed)), max(<span class="num">45</span>, int(<span class="num">750</span> / cac_speed)))
+
+        <span class="kwd">for</span> c <span class="kwd">in</span> cactus_list:
+            c[<span class="num">0</span>].x -= cac_speed
+            pygame.draw.rect(screen, (<span class="num">0</span>, <span class="num">150</span>, <span class="num">0</span>), c[<span class="num">0</span>])
+            <span class="kwd">if</span> c[<span class="num">0</span>].right &lt; dino_x <span class="kwd">and not</span> c[<span class="num">1</span>]:
+                obs += <span class="num">1</span>
+                c[<span class="num">1</span>] = <span class="kwd">True</span>
+                <span class="kwd">if</span> obs % <span class="num">5</span> == <span class="num">0</span> <span class="kwd">and</span> cac_speed &lt; <span class="num">30</span>:
+                    cac_speed += <span class="num">2</span>
+
+            <span class="kwd">if</span> dino_rect.colliderect(c[<span class="num">0</span>]):
+                save_history(player_id, obs * <span class="num">5</span>, obs)
+                save_scores(player_id, obs * <span class="num">5</span>, obs)
+                run = <span class="kwd">False</span>
+                <span class="kwd">break</span>
+
+        cactus_list = [c <span class="kwd">for</span> c <span class="kwd">in</span> cactus_list <span class="kwd">if</span> c[<span class="num">0</span>].right >= <span class="num">0</span>]
+        pygame.display.update()
+        clock.tick(<span class="num">60</span>)
+
+    pygame.quit()
+    <span class="kwd">return</span> obs * <span class="num">5</span>, obs
+
+<span class="cmt"># DRIVER CODE</span>
+Db()
+root = tk.Tk()
+root.title(<span class="str">"Dino Game Menu"</span>)
+root.geometry(<span class="str">"360x220"</span>)
+tk.Label(root, text=<span class="str">"Enter Username:"</span>, font=(<span class="str">"Arial"</span>, <span class="num">11</span>)).pack(pady=<span class="num">8</span>)
+username_entry = tk.Entry(root, font=(<span class="str">"Arial"</span>, <span class="num">11</span>))
+username_entry.pack(pady=<span class="num">4</span>)
+
+<span class="kwd">def</span> start_click():
+    u = username_entry.get().strip()
+    <span class="kwd">if not</span> u:
+        messagebox.showwarning(<span class="str">"Input"</span>, <span class="str">"Enter username!"</span>)
+        <span class="kwd">return</span>
+    pid = register_player(u)
+    <span class="kwd">if</span> pid:
+        root.withdraw()
+        game_flow(pid)
+
+tk.Button(root, text=<span class="str">"Start Game"</span>, width=<span class="num">16</span>, command=start_click).pack(pady=<span class="num">4</span>)
+tk.Button(root, text=<span class="str">"Game History"</span>, width=<span class="num">16</span>, command=show_history).pack(pady=<span class="num">4</span>)
+tk.Button(root, text=<span class="str">"High Scores"</span>, width=<span class="num">16</span>, command=show_stats).pack(pady=<span class="num">4</span>)
+root.mainloop()</code></pre>
+
+  <div class="doc-footer">
+    <span>Dino Game &amp; MySQL Integration</span>
+    <span>Page 2 of 4</span>
+  </div>
+</div>
+
+<!-- PAGE 3: EXPLANATIONS PART 1 (4 BOXES ONLY) -->
+<div class="a4-page">
+  <div class="doc-header">
+    <h1>Class 12 CS Project Submission - Dino Game &amp; MySQL (Colored)</h1>
+    <div class="meta">Page 3 of 4</div>
+  </div>
+
+  <div class="section-banner">
+    <h2>EXPLANATION FOR MAJOR PARTS (PART 1)</h2>
+    <p>Database Connectivity, Schema Relational Integrity &amp; Data Logic</p>
+  </div>
+
+  <div class="grid-4box">
+    <div class="box">
+      <h3>Database Init</h3>
+      <div class="sub-title">connect() &amp; Db()</div>
+      <ul>
+        <li><strong>Connection Handshake &amp; DDL Automation:</strong> <code>connect()</code> initializes the <code>mysql.connector</code> session with error-trapping to prevent abrupt crashes if the MySQL server is offline.</li>
+        <li><code>Db()</code> automatically runs DDL commands (<code>CREATE DATABASE IF NOT EXISTS</code>) to set up normalized tables without manual SQL intervention.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Schema Design</h3>
+      <div class="sub-title">Relational Integrity</div>
+      <ul>
+        <li><strong>Primary Keys &amp; Cascade Architecture:</strong></li>
+        <li><code>player</code>: Primary table storing unique player handles with auto-incrementing ID.</li>
+        <li><code>highscores</code>: 1-to-1 relationship with unique <code>player_id</code> foreign key; maintains the highest points scored.</li>
+        <li><code>game_history</code>: 1-to-Many relationship logging every match with automated <code>TIMESTAMP</code>. Uses <code>ON DELETE CASCADE</code> for clean referential integrity.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Player Auth</h3>
+      <div class="sub-title">register_player()</div>
+      <ul>
+        <li><strong>Sanitization &amp; Identifier Fetching:</strong> Queries for an existing username using parameterized placeholders (<code>%s</code>) to prevent SQL injection vulnerabilities.</li>
+        <li>If found, it returns the existing <code>players_id</code>. If not, it executes an <code>INSERT</code> and captures <code>cursor.lastrowid</code>.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Score Tracking</h3>
+      <div class="sub-title">save_scores() / history</div>
+      <ul>
+        <li><strong>Highscore Update vs. Run Auditing:</strong> <code>save_scores()</code> compares the current run against previous personal best, performing an <code>UPDATE</code> only on high-score breakthroughs.</li>
+        <li><code>save_history()</code> continuously appends complete run details (score, cleared obstacles, timestamp) for statistical auditing.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>Dino Game &amp; MySQL Integration</span>
+    <span>Page 3 of 4</span>
+  </div>
+</div>
+
+<!-- PAGE 4: EXPLANATIONS PART 2 (4 BOXES ONLY) -->
+<div class="a4-page">
+  <div class="doc-header">
+    <h1>Class 12 CS Project Submission - Dino Game &amp; MySQL (Colored)</h1>
+    <div class="meta">Page 4 of 4</div>
+  </div>
+
+  <div class="section-banner">
+    <h2>EXPLANATION FOR MAJOR PARTS (PART 2)</h2>
+    <p>Tkinter GUI Dashboard &amp; Pygame 2D Physics Mechanics</p>
+  </div>
+
+  <div class="grid-4box">
+    <div class="box">
+      <h3>GUI Dashboard</h3>
+      <div class="sub-title">Tkinter Windows</div>
+      <ul>
+        <li><strong>Menu Navigation &amp; Statistical Queries:</strong> Main Window validates user input before launching the game window.</li>
+        <li><code>show_stats()</code>: Executes an SQL <code>JOIN</code> between <code>player</code> and <code>highscores</code> with <code>ORDER BY score DESC</code> to render a ranked leaderboard.</li>
+        <li><code>show_history()</code>: Fetches recent match logs (<code>LIMIT 20</code>) with formatted timestamps.</li>
+        <li><code>game_over_window()</code>: Modal dialog allowing direct retry, menu navigation, or clean process termination.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Jump Physics</h3>
+      <div class="sub-title">Discrete Mechanics</div>
+      <ul>
+        <li><strong>Discrete Velocity &amp; Gravity Modeling:</strong> Pressing SPACE applies an initial upward impulse: <code>velo = -15</code>.</li>
+        <li>On each frame, gravity increments velocity: <code>velo += gravity</code> and <code>dino_y += velo</code>.</li>
+        <li>Ground boundary detection halts vertical displacement when <code>dino_y >= ground_y - dino_h</code>.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Dynamic Obstacles</h3>
+      <div class="sub-title">Procedural Spawning</div>
+      <ul>
+        <li><strong>Procedural Generation &amp; Balancing:</strong> Randomly selects from 3 distinct cactus dimensions (small, tall, wide).</li>
+        <li>Dynamically scales spawn intervals inversely with movement speed so obstacles never overlap or create impossible jumps.</li>
+        <li>Increases game speed by <code>+2</code> every 5 successfully cleared cacti.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Collision &amp; Loop</h3>
+      <div class="sub-title">Pygame 60 FPS</div>
+      <ul>
+        <li><strong>Real-Time Detection &amp; Memory Management:</strong> Performs bounding-box collision detection using <code>pygame.Rect.colliderect()</code> at 60 FPS.</li>
+        <li>Offscreen obstacles (<code>c[0].right &lt; 0</code>) are pruned via list filtering to prevent memory leaks.</li>
+        <li>Triggers automated database save functions immediately upon collision before destroying the Pygame window.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>Dino Game &amp; MySQL Integration</span>
+    <span>Page 4 of 4</span>
+  </div>
+</div>
+
+</body>
+</html> 
